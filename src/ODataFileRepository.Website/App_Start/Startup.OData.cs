@@ -1,5 +1,7 @@
 ﻿using Microsoft.OData.Edm;
+using Microsoft.OData.Edm.Library;
 using ODataFileRepository.Website.Models;
+using System;
 using System.Web.OData.Builder;
 
 namespace ODataFileRepository.Website
@@ -8,30 +10,21 @@ namespace ODataFileRepository.Website
     {
         private static class OData
         {
+            public const string TYPE_NAMESPACE = "type";
+
             public static IEdmModel CreateModel()
             {
-                var modelBuilder = new ODataConventionModelBuilder();
-                modelBuilder.EnableLowerCamelCase();
+                var model = new EdmModel();
 
-                DefineTypes(modelBuilder);
-                DefineEntityContainer(modelBuilder);
+                var fileType = new EdmEntityType(TYPE_NAMESPACE, "file", null, false, false, true);
+                model.AddElement(fileType);
+                model.SetDescriptionAnnotation(fileType, "Represents a file in the file repository.");
 
-                return modelBuilder.GetEdmModel();
-            }
+                var entityContainer = new EdmEntityContainer("container", "fileRepository");
+                var filesEntitySet = new EdmEntitySet(entityContainer, "files", fileType);
+                model.AddElement(entityContainer);
 
-            private static void DefineTypes(ODataModelBuilder modelBuilder)
-            {
-                var fileType = modelBuilder.EntityType<File>();
-                fileType.Name = "file";
-                fileType.Namespace = "type";
-            }
-
-            private static void DefineEntityContainer(ODataModelBuilder modelBuilder)
-            {
-                modelBuilder.Namespace = "container";
-                modelBuilder.ContainerName = "odataFileRepository";
-
-                modelBuilder.EntitySet<File>("files");
+                return model;
             }
         }
     }

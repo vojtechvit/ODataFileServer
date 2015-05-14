@@ -24,8 +24,6 @@ namespace ODataFileRepository.Website
                 routePrefix: "",
                 model: OData.CreateModel(),
                 batchHandler: batchHandler);
-
-            app.UseWebApi(config);
         }
     }
 }

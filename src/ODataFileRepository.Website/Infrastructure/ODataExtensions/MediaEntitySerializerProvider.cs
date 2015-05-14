@@ -1,0 +1,19 @@
+﻿using Microsoft.OData.Edm;
+using System.Web.OData.Formatter.Serialization;
+
+namespace ODataFileRepository.Infrastructure.ODataExtensions
+{
+    public class MediaEntitySerializerProvider : DefaultODataSerializerProvider
+    {
+        public override ODataEdmTypeSerializer GetEdmTypeSerializer(IEdmTypeReference edmType)
+        {
+            // media link entry
+            if (edmType.IsEntity())
+            {
+                return new MediaEntityTypeSerializer(this);
+            }
+
+            return base.GetEdmTypeSerializer(edmType);
+        }
+    }
+}
