@@ -1,19 +1,15 @@
-﻿using Microsoft.OData.Core;
-using ODataFileRepository.Infrastructure.ODataExtensions;
-using ODataFileRepository.Website.DataAccess.Contracts;
+﻿using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
-using ODataFileRepository.Website.Models;
+using ODataFileRepository.Website.ServiceModels;
 using System;
-using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.OData;
-using System.Web.OData.Extensions;
 using System.Web.OData.Routing;
-using Stream = System.IO.Stream;
 
 namespace ODataFileRepository.Website.Controllers
 {
@@ -27,26 +23,29 @@ namespace ODataFileRepository.Website.Controllers
             _fileDataAccess = fileDataAccess;
         }
 
+        [ODataRoute("files")]
         public async Task<IHttpActionResult> Get()
         {
             var files = await _fileDataAccess.GetAllAsync();
 
-            return Ok(files);
+            return Ok(files.Select(f => new File(f)));
         }
 
-        public async Task<IHttpActionResult> Get(string key)
+        [ODataRoute("files({key})")]
+        public async Task<IHttpActionResult> Get([FromODataUri] string key)
         {
             var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
+            var file = fileMetadata != null ? new File(fileMetadata) : null;
 
-            if (fileMetadata == null)
+            if (file == null)
             {
                 return NotFound();
             }
 
-            return Ok(fileMetadata);
+            return Ok(file);
         }
 
-        public async Task<IHttpActionResult> GetValueAsync([FromODataUri] string key)
+        public async Task<IHttpActionResult> GetValue([FromODataUri] string key)
         {
             var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
 
@@ -119,7 +118,7 @@ namespace ODataFileRepository.Website.Controllers
 
             var file = new File
             {
-                FullName = Guid.NewGuid().ToString("N"),
+                FullName = Guid.NewGuid().ToString("N").ToLowerInvariant(),
                 MediaType = contentTypeHeader.MediaType
             };
 

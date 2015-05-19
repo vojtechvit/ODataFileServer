@@ -1,9 +1,7 @@
-﻿using ODataFileRepository.Website.Models.Contracts;
+﻿using ODataFileRepository.Website.DomainModels.Contracts;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
 
-namespace ODataFileRepository.Website.Models
+namespace ODataFileRepository.Website.ServiceModels
 {
     public class File : IFileMetadata
     {

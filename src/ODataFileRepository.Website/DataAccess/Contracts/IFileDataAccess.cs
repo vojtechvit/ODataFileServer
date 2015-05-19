@@ -1,4 +1,4 @@
-﻿using ODataFileRepository.Website.Models.Contracts;
+﻿using ODataFileRepository.Website.DomainModels.Contracts;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;

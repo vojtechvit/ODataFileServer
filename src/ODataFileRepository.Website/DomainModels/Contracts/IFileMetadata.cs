@@ -1,4 +1,4 @@
-﻿namespace ODataFileRepository.Website.Models.Contracts
+﻿namespace ODataFileRepository.Website.DomainModels.Contracts
 {
     public interface IFileMetadata
     {

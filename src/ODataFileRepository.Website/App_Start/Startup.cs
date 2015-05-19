@@ -1,4 +1,8 @@
 ﻿using Microsoft.Owin;
+using Ninject;
+using Ninject.Web.Common.OwinHost;
+using Ninject.Web.WebApi;
+using Ninject.Web.WebApi.OwinHost;
 using Owin;
 using System.Web.Http;
 using System.Web.OData.Batch;
@@ -14,8 +18,6 @@ namespace ODataFileRepository.Website
         {
             var config = new HttpConfiguration();
 
-            config.MapHttpAttributeRoutes();
-
             var batchHandler = new DefaultODataBatchHandler(new HttpServer(config));
             config.EnableCaseInsensitive(true);
 
@@ -24,6 +26,9 @@ namespace ODataFileRepository.Website
                 routePrefix: "",
                 model: OData.CreateModel(),
                 batchHandler: batchHandler);
+
+            app.UseNinjectMiddleware(Ninject.GetConfiguredKernel);
+            app.UseNinjectWebApi(config);
         }
     }
 }
