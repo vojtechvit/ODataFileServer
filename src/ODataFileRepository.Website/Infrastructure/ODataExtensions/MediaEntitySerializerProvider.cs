@@ -7,7 +7,6 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
     {
         public override ODataEdmTypeSerializer GetEdmTypeSerializer(IEdmTypeReference edmType)
         {
-            // media link entry
             if (edmType.IsEntity())
             {
                 return new MediaEntityTypeSerializer(this);

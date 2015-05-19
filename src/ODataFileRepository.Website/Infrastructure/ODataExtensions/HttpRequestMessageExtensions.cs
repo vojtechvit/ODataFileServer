@@ -4,22 +4,25 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
 {
     public static class HttpRequestMessageExtensions
     {
-        public static IMediaLinkProvider GetMediaEntityStreamProvider(this HttpRequestMessage request)
+        public static IMediaStreamReferenceProvider GetMediaStreamReferenceProvider(
+            this HttpRequestMessage request)
         {
-            var key = typeof(IMediaLinkProvider).FullName;
+            var key = typeof(IMediaStreamReferenceProvider).FullName;
             object value;
 
             if (request.Properties.TryGetValue(key, out value))
             {
-                return (IMediaLinkProvider)value;
+                return (IMediaStreamReferenceProvider)value;
             }
 
             return null;
         }
 
-        public static void SetMediaEntityStreamProvider(this HttpRequestMessage request, IMediaLinkProvider provider)
+        public static void SetMediaStreamReferenceProvider(
+            this HttpRequestMessage request,
+            IMediaStreamReferenceProvider provider)
         {
-            var key = typeof(IMediaLinkProvider).FullName;
+            var key = typeof(IMediaStreamReferenceProvider).FullName;
             request.Properties[key] = provider;
         }
     }

@@ -33,7 +33,7 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
             }
 
             // get the metadata provider associated with the current request
-            var provider = entityInstanceContext.Request.GetMediaEntityStreamProvider();
+            var provider = entityInstanceContext.Request.GetMediaStreamReferenceProvider();
 
             // need metadata to construct the media link enty
             if (provider == null)
@@ -42,7 +42,7 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
             }
 
             // attach the media link entry
-            var mediaResource = provider.GetMediaLinks(entityInstanceContext, context);
+            var mediaResource = provider.GetMediaStreamReference(entityInstanceContext, context);
             entry.MediaResource = mediaResource;
 
             return entry;

@@ -6,7 +6,7 @@ using System.Web.OData.Routing.Conventions;
 
 namespace ODataFileRepository.Infrastructure.ODataExtensions
 {
-    public class MediaEntityRoutingConvention : EntityRoutingConvention
+    public class MediaEntityStreamRoutingConvention : EntityRoutingConvention
     {
         private const string ODataMediaLinkEntryPath = "~/entityset/key/$value";
         private const string ValueAction = "Value";

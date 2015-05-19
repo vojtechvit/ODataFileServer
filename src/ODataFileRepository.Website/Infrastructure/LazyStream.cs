@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ODataFileRepository.Infrastructure.ODataExtensions
+namespace ODataFileRepository.Infrastructure
 {
     /// <summary>
     /// Represents a lazy-initialized stream.

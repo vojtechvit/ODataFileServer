@@ -1,5 +1,8 @@
-﻿using ODataFileRepository.Website.DataAccess.Contracts;
+﻿using Microsoft.OData.Core;
+using ODataFileRepository.Infrastructure.ODataExtensions;
+using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
+using ODataFileRepository.Website.Infrastructure.ODataExtensions;
 using ODataFileRepository.Website.ServiceModels;
 using System;
 using System.Linq;
@@ -8,12 +11,15 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Controllers;
 using System.Web.OData;
+using System.Web.OData.Formatter.Serialization;
 using System.Web.OData.Routing;
 
 namespace ODataFileRepository.Website.Controllers
 {
-    public sealed class FilesController : ODataController
+    [ExtendedODataFormatting, ODataRouting]
+    public sealed class FilesController : ApiController, IMediaStreamReferenceProvider
     {
         private readonly IFileDataAccess _fileDataAccess;
 
@@ -22,16 +28,14 @@ namespace ODataFileRepository.Website.Controllers
         {
             _fileDataAccess = fileDataAccess;
         }
-
-        [ODataRoute("files")]
+        
         public async Task<IHttpActionResult> Get()
         {
             var files = await _fileDataAccess.GetAllAsync();
 
             return Ok(files.Select(f => new File(f)));
         }
-
-        [ODataRoute("files({key})")]
+        
         public async Task<IHttpActionResult> Get([FromODataUri] string key)
         {
             var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
@@ -143,7 +147,7 @@ namespace ODataFileRepository.Website.Controllers
             }
         }
 
-        public async Task<IHttpActionResult> Patch(string key, Delta<File> fileDelta)
+        public async Task<IHttpActionResult> Patch([FromODataUri] string key, Delta<File> fileDelta)
         {
             try
             {
@@ -164,7 +168,7 @@ namespace ODataFileRepository.Website.Controllers
         [HttpDelete]
         [ODataRoute("files({key})")]
         [ODataRoute("files({key})/$value")]
-        public async Task<IHttpActionResult> Delete(string key)
+        public async Task<IHttpActionResult> Delete([FromODataUri] string key)
         {
             try
             {
@@ -176,6 +180,32 @@ namespace ODataFileRepository.Website.Controllers
             {
                 return NotFound();
             }
+        }
+
+        protected override void Initialize(HttpControllerContext controllerContext)
+        {
+            base.Initialize(controllerContext);
+
+            Request.SetMediaStreamReferenceProvider(this);
+        }
+
+        ODataStreamReferenceValue IMediaStreamReferenceProvider.GetMediaStreamReference(
+            EntityInstanceContext entity,
+            ODataSerializerContext context)
+        {
+            var file = entity.EntityInstance as File;
+
+            if (file == null)
+            {
+                return null;
+            }
+
+            return new ODataStreamReferenceValue
+            {
+                //ReadLink = new Uri("files('" + file.FullName + "')/$value2", UriKind.Relative),
+                //EditLink = new Uri("files('" + file.FullName + "')/$value3", UriKind.Relative),
+                ContentType = file.MediaType
+            };
         }
     }
 }

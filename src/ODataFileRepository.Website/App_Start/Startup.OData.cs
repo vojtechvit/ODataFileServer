@@ -1,5 +1,10 @@
 ﻿using Microsoft.OData.Edm;
 using Microsoft.OData.Edm.Library;
+using Microsoft.OData.Edm.Library.Values;
+using ODataFileRepository.Website.Infrastructure.ODataExtensions;
+using ODataFileRepository.Website.ServiceModels;
+using System.Web.OData;
+using System.Web.OData.Builder;
 
 namespace ODataFileRepository.Website
 {
@@ -14,15 +19,15 @@ namespace ODataFileRepository.Website
                 var model = new EdmModel();
 
                 var fileType = new EdmEntityType(TYPE_NAMESPACE, "file", null, false, false, true);
-                model.AddElement(fileType);
                 model.SetDescriptionAnnotation(fileType, "Represents a file in the file repository.");
+                model.SetAnnotationValue(fileType, new ClrTypeAnnotation(typeof(File)));
+
+                model.AddElement(fileType);
 
                 var fullNameProperty = fileType.AddStructuralProperty("fullName", EdmPrimitiveTypeKind.String, false);
                 model.SetDescriptionAnnotation(fullNameProperty, "The unique full name of the file.");
+                model.SetAnnotationValue(fullNameProperty, new ClrPropertyInfoAnnotation(typeof(File).GetProperty("FullName")));
                 fileType.AddKeys(fullNameProperty);
-
-                var mediaTypeProperty = fileType.AddStructuralProperty("mediaType", EdmPrimitiveTypeKind.String, false);
-                model.SetDescriptionAnnotation(mediaTypeProperty, "The media type of the file.");
 
                 var entityContainer = new EdmEntityContainer("container", "fileRepository");
                 entityContainer.AddEntitySet("files", fileType);

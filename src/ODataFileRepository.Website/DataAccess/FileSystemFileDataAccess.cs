@@ -129,7 +129,8 @@ namespace ODataFileRepository.Website.DataAccess
 
         private static DirectoryInfo GetAppDataDirectory()
         {
-            return new DirectoryInfo(AppDomain.CurrentDomain.GetData("DataDirectory").ToString());
+            return new DirectoryInfo(@"C:\Users\iam_000\Source\Repos\ODataFileServer\src\ODataFileRepository.Website\App_Data");
+            //return new DirectoryInfo(AppDomain.CurrentDomain.GetData("DataDirectory").ToString());
         }
     }
 }

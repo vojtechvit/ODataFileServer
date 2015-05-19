@@ -1,5 +1,6 @@
 ﻿using ODataFileRepository.Website.DomainModels.Contracts;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ODataFileRepository.Website.ServiceModels
 {
@@ -18,9 +19,7 @@ namespace ODataFileRepository.Website.ServiceModels
         [Key]
         public string FullName { get; set; }
 
-        [Required]
-        // See 3.1.1.1 http://www.ietf.org/rfc/rfc7231.txt
-        [RegularExpression("^[!#$%&'*+-.^_`|~0-9a-zA-Z]+/[!#$%&'*+-.^_`|~0-9a-zA-Z]+$", ErrorMessage = "Invalid media type")]
+        [NotMapped]
         public string MediaType { get; set; }
     }
 }

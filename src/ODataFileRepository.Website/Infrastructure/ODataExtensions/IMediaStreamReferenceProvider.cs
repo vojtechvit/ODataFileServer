@@ -4,9 +4,9 @@ using System.Web.OData.Formatter.Serialization;
 
 namespace ODataFileRepository.Infrastructure.ODataExtensions
 {
-    public interface IMediaLinkProvider
+    public interface IMediaStreamReferenceProvider
     {
-        ODataStreamReferenceValue GetMediaLinks(
+        ODataStreamReferenceValue GetMediaStreamReference(
             EntityInstanceContext entity,
             ODataSerializerContext context);
     }
