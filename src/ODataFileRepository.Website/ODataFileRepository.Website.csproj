@@ -149,7 +149,6 @@
     <Compile Include="DataAccess\FileSystemFileDataAccess.cs" />
     <Compile Include="DomainModels\Contracts\IFileMetadata.cs" />
     <Compile Include="DomainModels\FileMetadata.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Infrastructure\ODataExtensions\DefaultMediaStreamReferenceProvider.cs" />
     <Compile Include="Infrastructure\ODataExtensions\ExtendedODataFormatting.cs" />
     <Compile Include="Infrastructure\ODataExtensions\HttpRequestMessageExtensions.cs" />
