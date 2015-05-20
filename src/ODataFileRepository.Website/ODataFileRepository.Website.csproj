@@ -35,7 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -144,6 +144,7 @@
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="DataAccess\Contracts\IFileDataAccess.cs" />
     <Compile Include="DataAccess\Exceptions\DataAccessException.cs" />
+    <Compile Include="DataAccess\Exceptions\ResourceAlreadyExistsException.cs" />
     <Compile Include="DataAccess\Exceptions\ResourceNotFoundException.cs" />
     <Compile Include="DataAccess\FileSystemFileDataAccess.cs" />
     <Compile Include="DomainModels\Contracts\IFileMetadata.cs" />
@@ -181,17 +182,17 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>False</UseIIS>
+          <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>59176</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost:59176/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
-          <UseCustomServer>True</UseCustomServer>
+          <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
           </CustomServerUrl>
           <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
-          <servers defaultServer="OwinHost">
+          <servers defaultServer="">
             <server name="OwinHost" exePath="{solutiondir}\..\packages\OwinHost.3.0.1\tools\OwinHost.exe" cmdArgs="-u {url}" url="http://localhost:12345/" workingDir="{projectdir}" />
           </servers>
         </WebProjectProperties>

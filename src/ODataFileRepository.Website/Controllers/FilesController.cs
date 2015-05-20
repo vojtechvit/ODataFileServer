@@ -5,6 +5,7 @@ using ODataFileRepository.Website.DataAccess.Exceptions;
 using ODataFileRepository.Website.Infrastructure.ODataExtensions;
 using ODataFileRepository.Website.ServiceModels;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -14,6 +15,7 @@ using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.OData;
 using System.Web.OData.Formatter.Serialization;
+using System.Web.OData.Results;
 using System.Web.OData.Routing;
 
 namespace ODataFileRepository.Website.Controllers
@@ -28,14 +30,14 @@ namespace ODataFileRepository.Website.Controllers
         {
             _fileDataAccess = fileDataAccess;
         }
-        
+
         public async Task<IHttpActionResult> Get()
         {
             var files = await _fileDataAccess.GetAllAsync();
 
             return Ok(files.Select(f => new File(f)));
         }
-        
+
         public async Task<IHttpActionResult> Get([FromODataUri] string key)
         {
             var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
@@ -120,26 +122,30 @@ namespace ODataFileRepository.Website.Controllers
                 return StatusCode(HttpStatusCode.BadRequest);
             }
 
-            var file = new File
-            {
-                FullName = Guid.NewGuid().ToString("N").ToLowerInvariant(),
-                MediaType = contentTypeHeader.MediaType
-            };
+            var fullName = Guid.NewGuid().ToString("N").ToLowerInvariant();
+            var mediaType = contentTypeHeader.MediaType;
 
             var stream = await Request.Content.ReadAsStreamAsync();
 
-            await _fileDataAccess.CreateAsync(file.FullName, file.MediaType, stream);
+            var file = await _fileDataAccess.CreateAsync(fullName, mediaType, stream);
 
-            return Ok(file);
+            return Created(new File(file));
         }
 
-        public async Task<IHttpActionResult> Put(File file)
+        public async Task<IHttpActionResult> Put([FromODataUri] string key, File file)
         {
+            if (file == null)
+            {
+                return BadRequest();
+            }
+
             try
             {
+                file.FullName = key;
+
                 await _fileDataAccess.UpdateMetadataAsync(file);
 
-                return Ok(file);
+                return Updated(file);
             }
             catch (ResourceNotFoundException)
             {
@@ -149,15 +155,23 @@ namespace ODataFileRepository.Website.Controllers
 
         public async Task<IHttpActionResult> Patch([FromODataUri] string key, Delta<File> fileDelta)
         {
+            if (fileDelta == null)
+            {
+                return BadRequest();
+            }
+
             try
             {
                 var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
+                var file = new File(fileMetadata);
 
-                fileDelta.Patch(new File(fileMetadata));
+                fileDelta.Patch(file);
 
-                await _fileDataAccess.UpdateMetadataAsync(fileMetadata);
+                file.FullName = key;
 
-                return Ok(fileMetadata);
+                await _fileDataAccess.UpdateMetadataAsync(file);
+
+                return Updated(file);
             }
             catch (ResourceNotFoundException)
             {
@@ -165,9 +179,36 @@ namespace ODataFileRepository.Website.Controllers
             }
         }
 
-        [HttpDelete]
-        [ODataRoute("files({key})")]
-        [ODataRoute("files({key})/$value")]
+        public async Task<IHttpActionResult> PutValue([FromODataUri] string key)
+        {
+            try
+            {
+                var contentTypeHeader = Request.Content.Headers.ContentType;
+
+                if (contentTypeHeader == null || contentTypeHeader.MediaType == null)
+                {
+                    return BadRequest();
+                }
+
+                if (!Request.Content.Headers.ContentLength.HasValue || Request.Content.Headers.ContentLength.Value <= 0)
+                {
+                    return BadRequest();
+                }
+
+                var mediaType = contentTypeHeader.MediaType;
+
+                var stream = await Request.Content.ReadAsStreamAsync();
+
+                await _fileDataAccess.UpdateStreamAsync(key, mediaType, stream);
+
+                return StatusCode(HttpStatusCode.NoContent);
+            }
+            catch (ResourceNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
         public async Task<IHttpActionResult> Delete([FromODataUri] string key)
         {
             try
@@ -182,14 +223,8 @@ namespace ODataFileRepository.Website.Controllers
             }
         }
 
-        protected override void Initialize(HttpControllerContext controllerContext)
-        {
-            base.Initialize(controllerContext);
-
-            Request.SetMediaStreamReferenceProvider(this);
-        }
-
-        ODataStreamReferenceValue IMediaStreamReferenceProvider.GetMediaStreamReference(
+        [NonAction]
+        public ODataStreamReferenceValue GetMediaStreamReference(
             EntityInstanceContext entity,
             ODataSerializerContext context)
         {
@@ -206,6 +241,41 @@ namespace ODataFileRepository.Website.Controllers
                 //EditLink = new Uri("files('" + file.FullName + "')/$value3", UriKind.Relative),
                 ContentType = file.MediaType
             };
+        }
+
+        protected override void Initialize(HttpControllerContext controllerContext)
+        {
+            base.Initialize(controllerContext);
+
+            Request.SetMediaStreamReferenceProvider(this);
+        }
+
+        /// <summary>Creates an action result with the specified values that is a response to a POST operation with an entity to an entity set.</summary>
+		/// <returns>A <see cref="T:System.Web.OData.Results.CreatedODataResult`1" /> with the specified values.</returns>
+		/// <param name="entity">The created entity.</param>
+		/// <typeparam name="TEntity">The created entity type.</typeparam>
+		private CreatedODataResult<TEntity> Created<TEntity>(TEntity entity)
+        {
+            if (entity == null)
+            {
+                throw new ArgumentNullException("entity");
+            }
+
+            return new CreatedODataResult<TEntity>(entity, this);
+        }
+
+        /// <summary>Creates an action result with the specified values that is a response to a PUT, PATCH, or a MERGE operation on an OData entity.</summary>
+        /// <returns>An <see cref="T:System.Web.OData.Results.UpdatedODataResult`1" /> with the specified values.</returns>
+        /// <param name="entity">The updated entity.</param>
+        /// <typeparam name="TEntity">The updated entity type.</typeparam>
+        private UpdatedODataResult<TEntity> Updated<TEntity>(TEntity entity)
+        {
+            if (entity == null)
+            {
+                throw new ArgumentNullException("entity");
+            }
+
+            return new UpdatedODataResult<TEntity>(entity, this);
         }
     }
 }

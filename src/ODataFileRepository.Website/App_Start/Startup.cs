@@ -25,7 +25,7 @@ namespace ODataFileRepository.Website
 
             var model = OData.CreateModel();
             var pathHandler = new DefaultODataPathHandler();
-            var routingConventions = ODataRoutingConventions.CreateDefaultWithAttributeRouting(config, model);
+            var routingConventions = ODataRoutingConventions.CreateDefault();
             routingConventions.Insert(0, new MediaEntityStreamRoutingConvention());
             var batchHandler = new DefaultODataBatchHandler(new HttpServer(config));
 

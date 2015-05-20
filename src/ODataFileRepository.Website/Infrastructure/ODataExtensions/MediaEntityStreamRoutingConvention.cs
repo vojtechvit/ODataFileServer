@@ -11,7 +11,10 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
         private const string ODataMediaLinkEntryPath = "~/entityset/key/$value";
         private const string ValueAction = "Value";
 
-        public override string SelectAction(ODataPath odataPath, HttpControllerContext controllerContext, ILookup<string, HttpActionDescriptor> actionMap)
+        public override string SelectAction(
+            ODataPath odataPath,
+            HttpControllerContext controllerContext,
+            ILookup<string, HttpActionDescriptor> actionMap)
         {
             if (odataPath.PathTemplate != ODataMediaLinkEntryPath)
             {
@@ -20,16 +23,30 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
 
             controllerContext.RouteData.Values["key"] = ((KeyValuePathSegment)odataPath.Segments[1]).Value;
 
-            var action = new StringBuilder(controllerContext.Request.Method.ToString().ToLowerInvariant());
+            string method = controllerContext.Request.Method.ToString().ToLowerInvariant();
+
+            var action = new StringBuilder(method);
 
             // select action based on the syntax: <verb>'MediaResource', where <verb> is Pascal case
             action[0] = char.ToUpperInvariant(action[0]);
+
+            string simpleActionName = action.ToString();
             action.Append(ValueAction);
 
-            var actionName = action.ToString();
+            var composedActionName = action.ToString();
 
-            // return null if there is no matching method
-            return actionMap.Contains(actionName) ? actionName : null;
+            if (actionMap.Contains(composedActionName))
+            {
+                return composedActionName;
+            }
+
+            // [OData-Protocol]: A successful DELETE request to the entity's edit URL or to the edit URL of its media resource deletes the media entity
+            if (method == "delete" && actionMap.Contains(simpleActionName))
+            {
+                return simpleActionName;
+            }
+
+            return null;
         }
     }
 }

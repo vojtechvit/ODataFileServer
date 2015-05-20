@@ -11,13 +11,15 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
 
         Task<bool> ExistsAsync(string fullName);
 
+        Task<IReadOnlyList<IFileMetadata>> GetAllAsync();
+
         Task<IFileMetadata> GetMetadataAsync(string fullName);
 
         Task<Stream> GetStreamAsync(string fullName);
 
-        Task<IReadOnlyList<IFileMetadata>> GetAllAsync();
+        Task UpdateMetadataAsync(IFileMetadata metadata);
 
-        Task UpdateMetadataAsync(IFileMetadata file);
+        Task UpdateStreamAsync(string fullName, string mediaType, Stream stream);
 
         Task DeleteAsync(string fullName);
     }
