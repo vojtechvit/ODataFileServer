@@ -1,9 +1,9 @@
 ﻿using Microsoft.OData.Edm;
 using Microsoft.OData.Edm.Library;
-using Microsoft.OData.Edm.Library.Values;
-using ODataFileRepository.Website.Infrastructure.ODataExtensions;
 using ODataFileRepository.Website.ServiceModels;
-using System.Web.OData;
+using System;
+using System.Globalization;
+using System.Reflection;
 using System.Web.OData.Builder;
 
 namespace ODataFileRepository.Website
@@ -12,29 +12,61 @@ namespace ODataFileRepository.Website
     {
         private static class OData
         {
-            public const string TYPE_NAMESPACE = "type";
+            private const string TypeNamespace = "type";
+
+            private const string FileTypeName = "file";
 
             public static IEdmModel CreateModel()
             {
-                var model = new EdmModel();
+                var modelBuilder = new ODataConventionModelBuilder();
+                modelBuilder.EnableLowerCamelCase();
+                modelBuilder.Namespace = "container";
+                modelBuilder.ContainerName = "fileRepository";
 
-                var fileType = new EdmEntityType(TYPE_NAMESPACE, "file", null, false, false, true);
-                model.SetDescriptionAnnotation(fileType, "Represents a file in the file repository.");
-                model.SetAnnotationValue(fileType, new ClrTypeAnnotation(typeof(File)));
+                var fileType = modelBuilder.EntityType<File>();
+                fileType.Name = FileTypeName;
+                fileType.Namespace = TypeNamespace;
 
-                model.AddElement(fileType);
+                modelBuilder.EntitySet<File>("files");
 
-                var fullNameProperty = fileType.AddStructuralProperty("fullName", EdmPrimitiveTypeKind.String, false);
-                model.SetDescriptionAnnotation(fullNameProperty, "The unique full name of the file.");
-                model.SetAnnotationValue(fullNameProperty, new ClrPropertyInfoAnnotation(typeof(File).GetProperty("FullName")));
-                fileType.AddKeys(fullNameProperty);
+                var model = modelBuilder.GetEdmModel() as EdmModel;
 
-                var entityContainer = new EdmEntityContainer("container", "fileRepository");
-                entityContainer.AddEntitySet("files", fileType);
+                var edmFileType = model.FindDeclaredType(string.Join(".", TypeNamespace, FileTypeName)) as EdmEntityType;
+                SetPrivateFieldValue(edmFileType, "hasStream", true);
 
-                model.AddElement(entityContainer);
+                model.SetDescriptionAnnotation(edmFileType, "Represents a file in the file repository.");
 
                 return model;
+            }
+
+            private static void SetPrivateFieldValue<T>(object obj, string propName, T val)
+            {
+                if (obj == null)
+                {
+                    throw new ArgumentNullException("obj");
+                }
+
+                Type t = obj.GetType();
+                FieldInfo fi = null;
+
+                while (fi == null && t != null)
+                {
+                    fi = t.GetField(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    t = t.BaseType;
+                }
+
+                if (fi == null)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        "propName",
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Field {0} was not found in Type {1}",
+                            propName,
+                            obj.GetType().FullName));
+                }
+
+                fi.SetValue(obj, val);
             }
         }
     }
