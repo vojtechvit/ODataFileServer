@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using System.Web.Http.Controllers;
 using System.Web.OData.Routing;
@@ -11,11 +13,28 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
         private const string ODataMediaLinkEntryPath = "~/entityset/key/$value";
         private const string ValueAction = "Value";
 
+        [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase",
+            Justification = "The call to ToLowerInvariant is not used just to normalize the string.")]
         public override string SelectAction(
             ODataPath odataPath,
             HttpControllerContext controllerContext,
             ILookup<string, HttpActionDescriptor> actionMap)
         {
+            if (odataPath == null)
+            {
+                throw new ArgumentNullException("odataPath");
+            }
+
+            if (controllerContext == null)
+            {
+                throw new ArgumentNullException("controllerContext");
+            }
+
+            if (actionMap == null)
+            {
+                throw new ArgumentNullException("actionMap");
+            }
+
             if (odataPath.PathTemplate != ODataMediaLinkEntryPath)
             {
                 return null;

@@ -1,4 +1,6 @@
 ﻿using Microsoft.OData.Core;
+using ODataFileRepository.Website.Infrastructure.ODataExtensions;
+using System;
 using System.Web.OData;
 using System.Web.OData.Formatter.Serialization;
 
@@ -15,6 +17,16 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
             SelectExpandNode selectExpandNode,
             EntityInstanceContext entityInstanceContext)
         {
+            if (selectExpandNode == null)
+            {
+                throw new ArgumentNullException("selectExpandNode");
+            }
+
+            if (entityInstanceContext == null)
+            {
+                throw new ArgumentNullException("entityInstanceContext");
+            }
+
             var entry = base.CreateEntry(selectExpandNode, entityInstanceContext);
             var context = entityInstanceContext.SerializerContext;
 

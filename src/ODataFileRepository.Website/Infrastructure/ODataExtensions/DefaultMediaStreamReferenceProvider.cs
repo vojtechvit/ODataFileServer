@@ -1,5 +1,6 @@
 ﻿using Microsoft.OData.Core;
 using ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts;
+using System;
 using System.Web.OData;
 using System.Web.OData.Formatter.Serialization;
 
@@ -11,6 +12,16 @@ namespace ODataFileRepository.Website.Infrastructure.ODataExtensions
             EntityInstanceContext entity,
             ODataSerializerContext context)
         {
+            if (entity == null)
+            {
+                throw new ArgumentNullException("entity");
+            }
+
+            if (context == null)
+            {
+                throw new ArgumentNullException("context");
+            }
+
             string mediaType = null;
             string eTag = null;
 

@@ -1,13 +1,19 @@
 ﻿using ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts;
+using System;
 using System.Net.Http;
 
-namespace ODataFileRepository.Infrastructure.ODataExtensions
+namespace ODataFileRepository.Website.Infrastructure.ODataExtensions
 {
     public static class HttpRequestMessageExtensions
     {
         public static IMediaStreamReferenceProvider GetMediaStreamReferenceProvider(
             this HttpRequestMessage request)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException("request");
+            }
+
             var key = typeof(IMediaStreamReferenceProvider).FullName;
             object value;
 
@@ -23,6 +29,11 @@ namespace ODataFileRepository.Infrastructure.ODataExtensions
             this HttpRequestMessage request,
             IMediaStreamReferenceProvider provider)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException("request");
+            }
+
             var key = typeof(IMediaStreamReferenceProvider).FullName;
             request.Properties[key] = provider;
         }

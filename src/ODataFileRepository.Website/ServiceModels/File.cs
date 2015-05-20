@@ -1,5 +1,6 @@
 ﻿using ODataFileRepository.Website.DomainModels.Contracts;
 using ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,6 +14,11 @@ namespace ODataFileRepository.Website.ServiceModels
 
         public File(IFileMetadata fileMetadata)
         {
+            if (fileMetadata == null)
+            {
+                throw new ArgumentNullException("fileMetadata");
+            }
+
             FullName = fileMetadata.FullName;
             MediaType = fileMetadata.MediaType;
         }

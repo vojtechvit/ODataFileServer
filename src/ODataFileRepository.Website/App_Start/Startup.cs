@@ -1,15 +1,12 @@
 ﻿using Microsoft.Owin;
-using Ninject;
 using Ninject.Web.Common.OwinHost;
-using Ninject.Web.WebApi;
 using Ninject.Web.WebApi.OwinHost;
 using ODataFileRepository.Infrastructure.ODataExtensions;
 using Owin;
+using System.Diagnostics.CodeAnalysis;
 using System.Web.Http;
 using System.Web.OData.Batch;
 using System.Web.OData.Extensions;
-using System.Web.OData.Formatter;
-using System.Web.OData.Formatter.Deserialization;
 using System.Web.OData.Routing;
 using System.Web.OData.Routing.Conventions;
 
@@ -19,6 +16,10 @@ namespace ODataFileRepository.Website
 {
     public partial class Startup
     {
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic",
+            Justification = "Method must be non-static due to OWIN conventions.")]
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "HttpConfiguration, DefaultODataBatchHandler and HttpServer are disposed by the web server.")]
         public void Configuration(IAppBuilder app)
         {
             var config = new HttpConfiguration();

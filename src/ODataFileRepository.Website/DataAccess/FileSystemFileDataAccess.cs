@@ -167,7 +167,7 @@ namespace ODataFileRepository.Website.DataAccess
             }
         }
 
-        public async Task<StreamWithMetadata> GetStreamAsync(string fullName)
+        public async Task<LazyServiceStream> GetStreamAsync(string fullName)
         {
             if (fullName == null)
             {
@@ -188,7 +188,7 @@ namespace ODataFileRepository.Website.DataAccess
                     metadata = JsonConvert.DeserializeObject<FileMetadata>(metadataString);
                 }
 
-                return new StreamWithMetadata(() => binaryFile.OpenRead(), metadata.MediaType);
+                return new LazyServiceStream(() => binaryFile.OpenRead(), metadata.MediaType);
             }
             catch (FileNotFoundException)
             {
