@@ -78,7 +78,7 @@ namespace ODataFileRepository.Website.Controllers
             {
                 if (!fileStream.CanSeek)
                 {
-                    return StatusCode(HttpStatusCode.RequestedRangeNotSatisfiable);
+                    return StatusCode(HttpStatusCode.NotImplemented);
                 }
 
                 var response = Request.CreateResponse(HttpStatusCode.PartialContent);
