@@ -149,13 +149,16 @@
     <Compile Include="DataAccess\FileSystemFileDataAccess.cs" />
     <Compile Include="DomainModels\Contracts\IFileMetadata.cs" />
     <Compile Include="DomainModels\FileMetadata.cs" />
+    <Compile Include="Infrastructure\ODataExtensions\DefaultMediaStreamReferenceProvider.cs" />
     <Compile Include="Infrastructure\ODataExtensions\ExtendedODataFormatting.cs" />
     <Compile Include="Infrastructure\ODataExtensions\HttpRequestMessageExtensions.cs" />
-    <Compile Include="Infrastructure\ODataExtensions\IMediaStreamReferenceProvider.cs" />
+    <Compile Include="Infrastructure\ODataExtensions\Contracts\IMediaTypeHolder.cs" />
+    <Compile Include="Infrastructure\ODataExtensions\Contracts\IMediaStreamReferenceProvider.cs" />
     <Compile Include="Infrastructure\LazyStream.cs" />
     <Compile Include="Infrastructure\ODataExtensions\MediaEntityTypeSerializer.cs" />
     <Compile Include="Infrastructure\ODataExtensions\MediaEntityStreamRoutingConvention.cs" />
     <Compile Include="Infrastructure\ODataExtensions\MediaEntitySerializerProvider.cs" />
+    <Compile Include="Infrastructure\StreamWithMetadata.cs" />
     <Compile Include="ServiceModels\File.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="App_Start\Startup.cs" />

@@ -4,14 +4,14 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ODataFileRepository.Infrastructure
+namespace ODataFileRepository.Website.Infrastructure
 {
     /// <summary>
     /// Represents a lazy-initialized stream.
     /// </summary>
     public class LazyStream : Stream
     {
-        private readonly Lazy<Stream> stream;
+        private readonly Lazy<Stream> _stream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LazyStream"/> class.
@@ -28,7 +28,12 @@ namespace ODataFileRepository.Infrastructure
         /// <param name="lazyStream">The underlying <see cref="Lazy{T}">on-demand</see> <see cref="Stream">stream</see>.</param>
         public LazyStream(Lazy<Stream> lazyStream)
         {
-            stream = lazyStream;
+            if (lazyStream == null)
+            {
+                throw new ArgumentNullException("lazyStream");
+            }
+
+            _stream = lazyStream;
         }
 
         /// <summary>
@@ -39,7 +44,7 @@ namespace ODataFileRepository.Infrastructure
         {
             get
             {
-                return stream.Value;
+                return _stream.Value;
             }
         }
 
@@ -126,7 +131,7 @@ namespace ODataFileRepository.Infrastructure
         /// </summary>
         public override void Close()
         {
-            if (stream.IsValueCreated)
+            if (_stream.IsValueCreated)
                 Stream.Close();
         }
 
@@ -153,8 +158,8 @@ namespace ODataFileRepository.Infrastructure
             if (!disposing)
                 return;
 
-            if (stream.IsValueCreated)
-                stream.Value.Dispose();
+            if (_stream.IsValueCreated)
+                _stream.Value.Dispose();
         }
 
         /// <summary>
@@ -193,7 +198,7 @@ namespace ODataFileRepository.Infrastructure
         /// </summary>
         public override void Flush()
         {
-            if (stream.IsValueCreated)
+            if (_stream.IsValueCreated)
                 Stream.Flush();
         }
 
@@ -206,7 +211,7 @@ namespace ODataFileRepository.Infrastructure
         /// <returns>A task that represents the asynchronous flush operation.</returns>
         public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            if (stream.IsValueCreated)
+            if (_stream.IsValueCreated)
                 return Stream.FlushAsync(cancellationToken);
 
             return Task.Run(() => { });

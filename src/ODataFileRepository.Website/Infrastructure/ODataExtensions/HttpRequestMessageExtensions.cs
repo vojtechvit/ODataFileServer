@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts;
+using System.Net.Http;
 
 namespace ODataFileRepository.Infrastructure.ODataExtensions
 {

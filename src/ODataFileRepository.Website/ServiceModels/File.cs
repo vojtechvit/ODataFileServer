@@ -1,10 +1,11 @@
 ﻿using ODataFileRepository.Website.DomainModels.Contracts;
+using ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ODataFileRepository.Website.ServiceModels
 {
-    public class File : IFileMetadata
+    public class File : IFileMetadata, IMediaTypeHolder
     {
         public File()
         {

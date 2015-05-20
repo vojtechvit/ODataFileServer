@@ -3,6 +3,7 @@ using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
 using ODataFileRepository.Website.DomainModels;
 using ODataFileRepository.Website.DomainModels.Contracts;
+using ODataFileRepository.Website.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -166,23 +167,32 @@ namespace ODataFileRepository.Website.DataAccess
             }
         }
 
-        public Task<Stream> GetStreamAsync(string fullName)
+        public async Task<StreamWithMetadata> GetStreamAsync(string fullName)
         {
             if (fullName == null)
             {
                 throw new ArgumentNullException("fullName");
             }
 
+            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName + ".json"));
             var binaryFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName));
-
-            if (!binaryFile.Exists)
-            {
-                return Task.FromResult((Stream)null);
-            }
 
             try
             {
-                return Task.FromResult<Stream>(binaryFile.OpenRead());
+                IFileMetadata metadata = null;
+
+                using (var fileStream = metadataFile.OpenRead())
+                using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
+                {
+                    string metadataString = await reader.ReadToEndAsync();
+                    metadata = JsonConvert.DeserializeObject<FileMetadata>(metadataString);
+                }
+
+                return new StreamWithMetadata(() => binaryFile.OpenRead(), metadata.MediaType);
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
             }
             catch (Exception exception)
             {

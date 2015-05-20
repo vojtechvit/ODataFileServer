@@ -2,7 +2,7 @@
 using System.Web.OData;
 using System.Web.OData.Formatter.Serialization;
 
-namespace ODataFileRepository.Infrastructure.ODataExtensions
+namespace ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts
 {
     public interface IMediaStreamReferenceProvider
     {

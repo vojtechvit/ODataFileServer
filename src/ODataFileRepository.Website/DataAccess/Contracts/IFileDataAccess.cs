@@ -1,4 +1,5 @@
 ﻿using ODataFileRepository.Website.DomainModels.Contracts;
+using ODataFileRepository.Website.Infrastructure;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
 
         Task<IFileMetadata> GetMetadataAsync(string fullName);
 
-        Task<Stream> GetStreamAsync(string fullName);
+        Task<StreamWithMetadata> GetStreamAsync(string fullName);
 
         Task UpdateMetadataAsync(IFileMetadata metadata);
 

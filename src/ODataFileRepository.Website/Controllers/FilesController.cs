@@ -1,11 +1,9 @@
-﻿using Microsoft.OData.Core;
-using ODataFileRepository.Infrastructure.ODataExtensions;
+﻿using ODataFileRepository.Infrastructure.ODataExtensions;
 using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
 using ODataFileRepository.Website.Infrastructure.ODataExtensions;
 using ODataFileRepository.Website.ServiceModels;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -14,14 +12,12 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.OData;
-using System.Web.OData.Formatter.Serialization;
 using System.Web.OData.Results;
-using System.Web.OData.Routing;
 
 namespace ODataFileRepository.Website.Controllers
 {
     [ExtendedODataFormatting, ODataRouting]
-    public sealed class FilesController : ApiController, IMediaStreamReferenceProvider
+    public sealed class FilesController : ApiController
     {
         private readonly IFileDataAccess _fileDataAccess;
 
@@ -53,14 +49,12 @@ namespace ODataFileRepository.Website.Controllers
 
         public async Task<IHttpActionResult> GetValue([FromODataUri] string key)
         {
-            var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
+            var fileStream = await _fileDataAccess.GetStreamAsync(key);
 
-            if (fileMetadata == null)
+            if (fileStream == null)
             {
                 return NotFound();
             }
-
-            var fileStream = await _fileDataAccess.GetStreamAsync(key);
 
             var range = Request.Headers.Range;
 
@@ -73,12 +67,11 @@ namespace ODataFileRepository.Website.Controllers
                 }
 
                 // if no range was requested, return the entire stream
-
                 var response = Request.CreateResponse(HttpStatusCode.OK);
 
                 response.Headers.AcceptRanges.Add("bytes");
                 response.Content = new StreamContent(fileStream);
-                response.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(fileMetadata.MediaType);
+                response.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(fileStream.MediaType);
 
                 return ResponseMessage(response);
             }
@@ -95,7 +88,7 @@ namespace ODataFileRepository.Website.Controllers
                 try
                 {
                     // return the requested range(s)
-                    response.Content = new ByteRangeStreamContent(fileStream, range, fileMetadata.MediaType);
+                    response.Content = new ByteRangeStreamContent(fileStream, range, fileStream.MediaType);
                 }
                 catch (InvalidByteRangeException)
                 {
@@ -115,11 +108,16 @@ namespace ODataFileRepository.Website.Controllers
 
         public async Task<IHttpActionResult> Post()
         {
+            if (!Request.Content.Headers.ContentLength.HasValue || Request.Content.Headers.ContentLength.Value <= 0)
+            {
+                return BadRequest();
+            }
+
             var contentTypeHeader = Request.Content.Headers.ContentType;
 
             if (contentTypeHeader == null || contentTypeHeader.MediaType == null)
             {
-                return StatusCode(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
 
             var fullName = Guid.NewGuid().ToString("N").ToLowerInvariant();
@@ -223,31 +221,11 @@ namespace ODataFileRepository.Website.Controllers
             }
         }
 
-        [NonAction]
-        public ODataStreamReferenceValue GetMediaStreamReference(
-            EntityInstanceContext entity,
-            ODataSerializerContext context)
-        {
-            var file = entity.EntityInstance as File;
-
-            if (file == null)
-            {
-                return null;
-            }
-
-            return new ODataStreamReferenceValue
-            {
-                //ReadLink = new Uri("files('" + file.FullName + "')/$value2", UriKind.Relative),
-                //EditLink = new Uri("files('" + file.FullName + "')/$value3", UriKind.Relative),
-                ContentType = file.MediaType
-            };
-        }
-
         protected override void Initialize(HttpControllerContext controllerContext)
         {
             base.Initialize(controllerContext);
 
-            Request.SetMediaStreamReferenceProvider(this);
+            Request.SetMediaStreamReferenceProvider(new DefaultMediaStreamReferenceProvider());
         }
 
         /// <summary>Creates an action result with the specified values that is a response to a POST operation with an entity to an entity set.</summary>
