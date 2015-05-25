@@ -18,37 +18,41 @@ namespace ODataFileRepository.Website.Controllers
     [ExtendedODataFormatting, ODataRouting]
     public sealed class FilesController : ApiController
     {
-        private readonly IFileDataAccess _fileDataAccess;
+        private readonly Lazy<IFileDataAccess> _fileDataAccess;
 
         public FilesController(
-            IFileDataAccess fileDataAccess)
+            Lazy<IFileDataAccess> fileDataAccess)
         {
             _fileDataAccess = fileDataAccess;
         }
 
+        private IFileDataAccess FileDataAccess
+        {
+            get { return _fileDataAccess.Value; }
+        }
+
         public async Task<IHttpActionResult> Get()
         {
-            var files = await _fileDataAccess.GetAllAsync();
+            var files = await FileDataAccess.GetAllAsync();
 
             return Ok(files.Select(f => new File(f)));
         }
 
         public async Task<IHttpActionResult> Get([FromODataUri] string key)
         {
-            var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
-            var file = fileMetadata != null ? new File(fileMetadata) : null;
+            var file = await FileDataAccess.GetAsync(key);
 
             if (file == null)
             {
                 return NotFound();
             }
 
-            return Ok(file);
+            return Ok(new File(file));
         }
 
         public async Task<IHttpActionResult> GetValue([FromODataUri] string key)
         {
-            var fileStream = await _fileDataAccess.GetStreamAsync(key);
+            var fileStream = await FileDataAccess.GetStreamAsync(key);
 
             if (fileStream == null)
             {
@@ -119,12 +123,12 @@ namespace ODataFileRepository.Website.Controllers
                 return BadRequest();
             }
 
-            var fullName = Guid.NewGuid().ToString("N").ToLowerInvariant();
+            var identifier = Guid.NewGuid().ToString("N").ToLowerInvariant();
             var mediaType = contentTypeHeader.MediaType;
 
             var stream = await Request.Content.ReadAsStreamAsync();
 
-            var file = await _fileDataAccess.CreateAsync(fullName, mediaType, stream);
+            var file = await FileDataAccess.CreateAsync(identifier, null, mediaType, stream);
 
             return Created(new File(file));
         }
@@ -138,9 +142,9 @@ namespace ODataFileRepository.Website.Controllers
 
             try
             {
-                file.FullName = key;
+                file.Id = key;
 
-                await _fileDataAccess.UpdateMetadataAsync(file);
+                await FileDataAccess.UpdateAsync(file);
 
                 return Updated(file);
             }
@@ -159,14 +163,14 @@ namespace ODataFileRepository.Website.Controllers
 
             try
             {
-                var fileMetadata = await _fileDataAccess.GetMetadataAsync(key);
+                var fileMetadata = await FileDataAccess.GetAsync(key);
                 var file = new File(fileMetadata);
 
                 fileDelta.Patch(file);
 
-                file.FullName = key;
+                file.Id = key;
 
-                await _fileDataAccess.UpdateMetadataAsync(file);
+                await FileDataAccess.UpdateAsync(file);
 
                 return Updated(file);
             }
@@ -187,7 +191,12 @@ namespace ODataFileRepository.Website.Controllers
                     return BadRequest();
                 }
 
-                if (!Request.Content.Headers.ContentLength.HasValue || Request.Content.Headers.ContentLength.Value <= 0)
+                if (!Request.Content.Headers.ContentLength.HasValue)
+                {
+                    return StatusCode(HttpStatusCode.LengthRequired);
+                }
+
+                if (Request.Content.Headers.ContentLength.Value <= 0)
                 {
                     return BadRequest();
                 }
@@ -196,7 +205,7 @@ namespace ODataFileRepository.Website.Controllers
 
                 var stream = await Request.Content.ReadAsStreamAsync();
 
-                await _fileDataAccess.UpdateStreamAsync(key, mediaType, stream);
+                await FileDataAccess.UpdateStreamAsync(key, mediaType, stream);
 
                 return StatusCode(HttpStatusCode.NoContent);
             }
@@ -210,7 +219,7 @@ namespace ODataFileRepository.Website.Controllers
         {
             try
             {
-                await _fileDataAccess.DeleteAsync(key);
+                await FileDataAccess.DeleteAsync(key);
 
                 return StatusCode(HttpStatusCode.NoContent);
             }

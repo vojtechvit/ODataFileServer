@@ -141,14 +141,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\Startup.Ninject.cs" />
+    <Compile Include="Controllers\UploadSessionsController.cs" />
     <Compile Include="Controllers\FilesController.cs" />
+    <Compile Include="DataAccess\Contracts\IUploadSessionDataAccess.cs" />
+    <Compile Include="DataAccess\Contracts\IFileVersionDataAccess.cs" />
     <Compile Include="DataAccess\Contracts\IFileDataAccess.cs" />
     <Compile Include="DataAccess\Exceptions\DataAccessException.cs" />
     <Compile Include="DataAccess\Exceptions\ResourceAlreadyExistsException.cs" />
     <Compile Include="DataAccess\Exceptions\ResourceNotFoundException.cs" />
-    <Compile Include="DataAccess\FileSystemFileDataAccess.cs" />
-    <Compile Include="DomainModels\Contracts\IFileMetadata.cs" />
-    <Compile Include="DomainModels\FileMetadata.cs" />
+    <Compile Include="DataAccess\FileSystem\Exceptions.cs" />
+    <Compile Include="DataAccess\FileSystem\FileSystemFileDataAccess.cs" />
+    <Compile Include="DataAccessModels\Contracts\IFileMetadata.cs" />
+    <Compile Include="DataAccessModels\Contracts\IFileVersionMetadata.cs" />
+    <Compile Include="DataAccessModels\Contracts\IUploadSession.cs" />
+    <Compile Include="DataAccessModels\FileMetadata.cs" />
+    <Compile Include="DataAccessModels\FileVersionMetadata.cs" />
+    <Compile Include="DataAccessModels\UploadSession.cs" />
+    <Compile Include="DataAccess\FileSystem\FileSystemHelpers.cs" />
+    <Compile Include="DataAccess\FileSystem\FileSystemUploadSessionDataAccess.cs" />
+    <Compile Include="DataAccess\FileSystem\Range.cs" />
     <Compile Include="Infrastructure\ODataExtensions\DefaultMediaStreamReferenceProvider.cs" />
     <Compile Include="Infrastructure\ODataExtensions\ExtendedODataFormatting.cs" />
     <Compile Include="Infrastructure\ODataExtensions\HttpRequestMessageExtensions.cs" />
@@ -162,6 +173,8 @@
     <Compile Include="ServiceModels\File.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="App_Start\Startup.cs" />
+    <Compile Include="ServiceModels\FileVersion.cs" />
+    <Compile Include="ServiceModels\UploadSession.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="web.config" />
@@ -172,7 +185,7 @@
     <None Include="Properties\PublishProfiles\odatafileserver - Web Deploy.pubxml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
+    <Folder Include="App_Start\App_Data\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

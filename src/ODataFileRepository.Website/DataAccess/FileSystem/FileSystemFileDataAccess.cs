@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
-using ODataFileRepository.Website.DomainModels;
-using ODataFileRepository.Website.DomainModels.Contracts;
+using ODataFileRepository.Website.DataAccessModels;
+using ODataFileRepository.Website.DataAccessModels.Contracts;
 using ODataFileRepository.Website.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -11,17 +11,19 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ODataFileRepository.Website.DataAccess
+namespace ODataFileRepository.Website.DataAccess.FileSystem
 {
     public sealed class FileSystemFileDataAccess : IFileDataAccess
     {
-        private static DirectoryInfo _appDataDirectory = GetAppDataDirectory();
-
-        public async Task<IFileMetadata> CreateAsync(string fullName, string mediaType, Stream stream)
+        public async Task<IFileMetadata> CreateAsync(
+            string identifier,
+            string name,
+            string mediaType,
+            Stream stream)
         {
-            if (fullName == null)
+            if (identifier == null)
             {
-                throw new ArgumentNullException("fullName");
+                throw new ArgumentNullException("identifier");
             }
 
             if (mediaType == null)
@@ -34,8 +36,8 @@ namespace ODataFileRepository.Website.DataAccess
                 throw new ArgumentNullException("stream");
             }
 
-            var binaryFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName));
-            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName + ".json"));
+            var binaryFile = GetBinaryFileInfo(identifier);
+            var metadataFile = GetMetadataFileInfo(identifier);
 
             try
             {
@@ -46,17 +48,11 @@ namespace ODataFileRepository.Website.DataAccess
 
                 var metadata = new FileMetadata
                 {
-                    FullName = fullName,
-                    MediaType = mediaType
+                    Id = identifier,
+                    Name = name
                 };
 
-                var metadataJson = JsonConvert.SerializeObject(metadata);
-                var metadataJsonBytes = Encoding.UTF8.GetBytes(metadataJson);
-
-                using (var fileStream = new FileStream(metadataFile.FullName, FileMode.CreateNew, FileAccess.Write))
-                {
-                    await fileStream.WriteAsync(metadataJsonBytes, 0, metadataJsonBytes.Length);
-                }
+                await SaveMetadata(metadataFile, metadata);
 
                 return metadata;
             }
@@ -98,7 +94,7 @@ namespace ODataFileRepository.Website.DataAccess
                 throw new ArgumentNullException("fullName");
             }
 
-            var binaryFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName));
+            var binaryFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName));
 
             return Task.FromResult(binaryFile.Exists);
         }
@@ -107,7 +103,7 @@ namespace ODataFileRepository.Website.DataAccess
         {
             try
             {
-                var metadataFiles = _appDataDirectory.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly);
+                var metadataFiles = FileSystemHelpers.AppDataDirectory.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly);
 
                 var readTasks = new List<Task<IFileMetadata>>();
 
@@ -115,12 +111,7 @@ namespace ODataFileRepository.Website.DataAccess
                 {
                     readTasks.Add(Task.Run<IFileMetadata>(async () =>
                     {
-                        using (var fileStream = metadataFile.OpenRead())
-                        using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
-                        {
-                            string metadataString = await reader.ReadToEndAsync();
-                            return JsonConvert.DeserializeObject<FileMetadata>(metadataString);
-                        }
+                        return await ReadMetadata(metadataFile);
                     }));
                 }
 
@@ -134,23 +125,18 @@ namespace ODataFileRepository.Website.DataAccess
             }
         }
 
-        public async Task<IFileMetadata> GetMetadataAsync(string fullName)
+        public async Task<IFileMetadata> GetAsync(string fullName)
         {
             if (fullName == null)
             {
                 throw new ArgumentNullException("fullName");
             }
 
-            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName + ".json"));
+            var metadataFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName + ".json"));
 
             try
             {
-                using (var fileStream = metadataFile.OpenRead())
-                using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
-                {
-                    string metadataString = await reader.ReadToEndAsync();
-                    return JsonConvert.DeserializeObject<FileMetadata>(metadataString);
-                }
+                return await ReadMetadata(metadataFile);
             }
             catch (FileNotFoundException)
             {
@@ -174,19 +160,12 @@ namespace ODataFileRepository.Website.DataAccess
                 throw new ArgumentNullException("fullName");
             }
 
-            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName + ".json"));
-            var binaryFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName));
+            var metadataFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName + ".json"));
+            var binaryFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName));
 
             try
             {
-                IFileMetadata metadata = null;
-
-                using (var fileStream = metadataFile.OpenRead())
-                using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
-                {
-                    string metadataString = await reader.ReadToEndAsync();
-                    metadata = JsonConvert.DeserializeObject<FileMetadata>(metadataString);
-                }
+                var metadata = await ReadMetadata(metadataFile);
 
                 return new LazyServiceStream(() => binaryFile.OpenRead(), metadata.MediaType);
             }
@@ -205,33 +184,23 @@ namespace ODataFileRepository.Website.DataAccess
             }
         }
 
-        public async Task UpdateMetadataAsync(IFileMetadata metadata)
+        public async Task UpdateAsync(IFileMetadata metadata)
         {
             if (metadata == null)
             {
                 throw new ArgumentNullException("metadata");
             }
 
-            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName + ".json", metadata.FullName));
+            var metadataFile = GetMetadataFileInfo(metadata.Id);
 
             if (!metadataFile.Exists)
             {
-                throw new ResourceNotFoundException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "File with full name: '{0}' does not exist.",
-                        metadataFile.Name));
+                Exceptions.ResourceNotFound(metadataFile.Name);
             }
 
             try
             {
-                var metadataJson = JsonConvert.SerializeObject(metadata);
-                var metadataJsonBytes = Encoding.UTF8.GetBytes(metadataJson);
-
-                using (var fileStream = new FileStream(metadataFile.FullName, FileMode.Create, FileAccess.Write))
-                {
-                    await fileStream.WriteAsync(metadataJsonBytes, 0, metadataJsonBytes.Length);
-                }
+                await SaveMetadata(metadataFile, metadata);
             }
             catch (Exception exception)
             {
@@ -239,16 +208,16 @@ namespace ODataFileRepository.Website.DataAccess
                     string.Format(
                         CultureInfo.InvariantCulture,
                         "Could not update metadata of file '{0}' due to an internal error in the data access layer.",
-                        metadata.FullName),
+                        metadata.Id),
                     exception);
             }
         }
 
-        public async Task UpdateStreamAsync(string fullName, string mediaType, Stream stream)
+        public async Task UpdateStreamAsync(string identifier, string mediaType, Stream stream)
         {
-            if (fullName == null)
+            if (identifier == null)
             {
-                throw new ArgumentNullException("fullName");
+                throw new ArgumentNullException("identifier");
             }
 
             if (mediaType == null)
@@ -261,16 +230,12 @@ namespace ODataFileRepository.Website.DataAccess
                 throw new ArgumentNullException("stream");
             }
 
-            var binaryFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName));
-            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName + ".json"));
+            var binaryFile = GetBinaryFileInfo(identifier);
+            var metadataFile = GetMetadataFileInfo(identifier);
 
             if (!binaryFile.Exists)
             {
-                throw new ResourceNotFoundException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "File with full name: '{0}' does not exist.",
-                        fullName));
+                Exceptions.ResourceNotFound(binaryFile.Name);
             }
 
             try
@@ -280,24 +245,11 @@ namespace ODataFileRepository.Website.DataAccess
                     await stream.CopyToAsync(fileStream);
                 }
 
-                FileMetadata metadata = null;
-
-                using (var fileStream = metadataFile.OpenRead())
-                using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
-                {
-                    string metadataString = await reader.ReadToEndAsync();
-                    metadata = JsonConvert.DeserializeObject<FileMetadata>(metadataString);
-                }
+                var metadata = await ReadMetadata(metadataFile);
 
                 metadata.MediaType = mediaType;
 
-                var metadataJson = JsonConvert.SerializeObject(metadata);
-                var metadataJsonBytes = Encoding.UTF8.GetBytes(metadataJson);
-
-                using (var fileStream = new FileStream(metadataFile.FullName, FileMode.Create, FileAccess.Write))
-                {
-                    await fileStream.WriteAsync(metadataJsonBytes, 0, metadataJsonBytes.Length);
-                }
+                await SaveMetadata(metadataFile, metadata);
             }
             catch (Exception exception)
             {
@@ -309,24 +261,19 @@ namespace ODataFileRepository.Website.DataAccess
                     exception);
             }
         }
-
-        public Task DeleteAsync(string fullName)
+        public Task DeleteAsync(string identifier)
         {
-            if (fullName == null)
+            if (identifier == null)
             {
-                throw new ArgumentNullException("fullName");
+                throw new ArgumentNullException("identifier");
             }
 
-            var binaryFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName));
-            var metadataFile = new FileInfo(Path.Combine(_appDataDirectory.FullName, fullName + ".json"));
+            var binaryFile = GetBinaryFileInfo(identifier);
+            var metadataFile = GetMetadataFileInfo(identifier);
 
             if (!binaryFile.Exists)
             {
-                throw new ResourceNotFoundException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "File with full name: '{0}' does not exist.",
-                        binaryFile.Name));
+                Exceptions.ResourceNotFound(binaryFile.Name);
             }
 
             try
@@ -347,9 +294,49 @@ namespace ODataFileRepository.Website.DataAccess
             }
         }
 
-        private static DirectoryInfo GetAppDataDirectory()
+        private static FileInfo GetBinaryFileInfo(string identifier)
         {
-            return new DirectoryInfo(AppDomain.CurrentDomain.GetData("DataDirectory").ToString());
+            if (identifier == null)
+            {
+                throw new ArgumentNullException("identifier");
+            }
+
+            return new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "files", identifier, "content"));
+        }
+
+        private static FileInfo GetMetadataFileInfo(string identifier)
+        {
+            if (identifier == null)
+            {
+                throw new ArgumentNullException("identifier");
+            }
+
+            return new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "files", identifier, "metadata.json"));
+        }
+
+        private static async Task<FileMetadata> ReadMetadata(FileInfo metadataFile)
+        {
+            FileMetadata metadata = null;
+
+            using (var fileStream = metadataFile.OpenRead())
+            using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
+            {
+                string metadataString = await reader.ReadToEndAsync();
+                metadata = JsonConvert.DeserializeObject<FileMetadata>(metadataString);
+            }
+
+            return metadata;
+        }
+
+        private static async Task SaveMetadata(FileInfo metadataFile, IFileMetadata metadata)
+        {
+            var metadataJson = JsonConvert.SerializeObject(metadata);
+            var metadataJsonBytes = Encoding.UTF8.GetBytes(metadataJson);
+
+            using (var fileStream = new FileStream(metadataFile.FullName, FileMode.CreateNew, FileAccess.Write))
+            {
+                await fileStream.WriteAsync(metadataJsonBytes, 0, metadataJsonBytes.Length);
+            }
         }
     }
 }
