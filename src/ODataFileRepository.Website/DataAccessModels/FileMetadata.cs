@@ -1,5 +1,4 @@
-﻿using System;
-using ODataFileRepository.Website.DataAccessModels.Contracts;
+﻿using ODataFileRepository.Website.DataAccessModels.Contracts;
 
 namespace ODataFileRepository.Website.DataAccessModels
 {

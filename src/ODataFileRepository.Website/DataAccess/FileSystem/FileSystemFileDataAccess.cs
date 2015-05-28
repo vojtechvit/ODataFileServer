@@ -62,7 +62,8 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 var metadata = new FileMetadata
                 {
                     Id = identifier,
-                    Name = name
+                    Name = name,
+                    MediaType = mediaType
                 };
 
                 await SaveFileMetadataAsync(metadata);
