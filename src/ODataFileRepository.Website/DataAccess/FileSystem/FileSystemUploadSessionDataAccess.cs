@@ -389,7 +389,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             var uploadSessionJson = JsonConvert.SerializeObject(uploadSession);
             var uploadSessionJsonBytes = Encoding.UTF8.GetBytes(uploadSessionJson);
 
-            using (var fileStream = new FileStream(uploadSessionFile.FullName, FileMode.CreateNew, FileAccess.Write))
+            using (var fileStream = new FileStream(uploadSessionFile.FullName, FileMode.Create, FileAccess.Write))
             {
                 await fileStream.WriteAsync(uploadSessionJsonBytes, 0, uploadSessionJsonBytes.Length);
             }

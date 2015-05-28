@@ -147,7 +147,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             {
                 var metadata = await ReadFileMetadataAsync(metadataFile);
 
-                return new LazyMediaStream(() => binaryFile.OpenRead(), metadata.MediaType);
+                return new LazyMediaStream(() => binaryFile.OpenRead(), metadata.MediaType, metadata.Name);
             }
             catch (FileNotFoundException)
             {
@@ -302,7 +302,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             var metadataJson = JsonConvert.SerializeObject(metadata);
             var metadataJsonBytes = Encoding.UTF8.GetBytes(metadataJson);
 
-            using (var fileStream = new FileStream(metadataFile.FullName, FileMode.CreateNew, FileAccess.Write))
+            using (var fileStream = new FileStream(metadataFile.FullName, FileMode.Create, FileAccess.Write))
             {
                 await fileStream.WriteAsync(metadataJsonBytes, 0, metadataJsonBytes.Length);
             }

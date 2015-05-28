@@ -73,8 +73,19 @@ namespace ODataFileRepository.Website.Controllers
                 var response = Request.CreateResponse(HttpStatusCode.OK);
 
                 response.Headers.AcceptRanges.Add("bytes");
+
                 response.Content = new StreamContent(fileStream);
                 response.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(fileStream.MediaType);
+
+                if (fileStream.FileName != null)
+                {
+                    var contentDispositionHeader = new ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName = fileStream.FileName
+                    };
+
+                    response.Content.Headers.ContentDisposition = contentDispositionHeader;
+                }
 
                 return ResponseMessage(response);
             }
@@ -97,6 +108,16 @@ namespace ODataFileRepository.Website.Controllers
                 {
                     response.Dispose();
                     throw;
+                }
+
+                if (fileStream.FileName != null)
+                {
+                    var contentDispositionHeader = new ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName = fileStream.FileName
+                    };
+
+                    response.Content.Headers.ContentDisposition = contentDispositionHeader;
                 }
 
                 // change status code if the entire stream was requested
@@ -142,7 +163,10 @@ namespace ODataFileRepository.Website.Controllers
 
             try
             {
-                file.Id = key;
+                var fileOriginal = await FileDataAccess.GetAsync(key);
+
+                file.Id = fileOriginal.Id;
+                file.MediaType = fileOriginal.MediaType;
 
                 await FileDataAccess.UpdateAsync(file);
 
