@@ -1,9 +1,7 @@
 ﻿using ODataFileRepository.Website.DataAccessModels.Contracts;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Web.OData.Builder;
 
 namespace ODataFileRepository.Website.ServiceModels
 {
@@ -32,11 +30,5 @@ namespace ODataFileRepository.Website.ServiceModels
 
         [Required]
         public string MediaType { get; set; }
-
-        [Required]
-        public FileVersion CurrentVersion { get; set; }
-
-        [Contained]
-        public ICollection<FileVersion> Versions { get; set; }
     }
 }

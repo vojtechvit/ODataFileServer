@@ -81,7 +81,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
         {
             if (identifier == null)
             {
-                throw new ArgumentNullException("fullName");
+                throw new ArgumentNullException("identifier");
             }
 
             return Task.FromResult(GetFileDirectoryInfo(identifier).Exists);
@@ -114,7 +114,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
         {
             if (identifier == null)
             {
-                throw new ArgumentNullException("fullName");
+                throw new ArgumentNullException("identifier");
             }
 
             var metadataFile = GetFileMetadataFileInfo(identifier);

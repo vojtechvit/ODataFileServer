@@ -5,6 +5,7 @@ using ODataFileRepository.Website.DataAccessModels;
 using ODataFileRepository.Website.DataAccessModels.Contracts;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -312,7 +313,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 
             return (from segmentFile in segmentFiles
                     let nameSplit = segmentFile.Name.Split('-')
-                    let range = new Range(long.Parse(nameSplit[1]), long.Parse(nameSplit[2]))
+                    let range = new Range(long.Parse(nameSplit[1], CultureInfo.InvariantCulture), long.Parse(nameSplit[2], CultureInfo.InvariantCulture))
                     orderby range.From
                     select range)
                    .ToList();

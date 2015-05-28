@@ -17,14 +17,14 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
             Justification = "Represents an operation, not a property of this class.")]
         Task<IReadOnlyList<IFileMetadata>> GetAllAsync();
 
-        Task<IFileMetadata> GetAsync(string fileIdentifier);
+        Task<IFileMetadata> GetAsync(string identifier);
 
-        Task<LazyMediaStream> GetStreamAsync(string fileIdentifier);
+        Task<LazyMediaStream> GetStreamAsync(string identifier);
 
-        Task UpdateAsync(IFileMetadata fileMetadata);
+        Task UpdateAsync(IFileMetadata metadata);
 
-        Task UpdateStreamAsync(string fileIdentifier, string mediaType, Stream stream);
+        Task UpdateStreamAsync(string identifier, string mediaType, Stream stream);
 
-        Task DeleteAsync(string fileIdentifier);
+        Task DeleteAsync(string identifier);
     }
 }

@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Rules for ODataFileRepository.Website" Description="Code analysis rules for ODataFileRepository.Website.csproj." ToolsVersion="14.0">
+  <IncludeAll Action="Warning" />
+</RuleSet>
