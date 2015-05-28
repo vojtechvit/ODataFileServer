@@ -147,9 +147,12 @@
     <Compile Include="DataAccess\Contracts\IFileVersionDataAccess.cs" />
     <Compile Include="DataAccess\Contracts\IFileDataAccess.cs" />
     <Compile Include="DataAccess\Exceptions\DataAccessException.cs" />
+    <Compile Include="DataAccess\Exceptions\InvalidMediaTypeException.cs" />
+    <Compile Include="DataAccess\Exceptions\InvalidRangeException.cs" />
+    <Compile Include="DataAccess\Exceptions\UploadSessionExpiredException.cs" />
     <Compile Include="DataAccess\Exceptions\ResourceAlreadyExistsException.cs" />
     <Compile Include="DataAccess\Exceptions\ResourceNotFoundException.cs" />
-    <Compile Include="DataAccess\FileSystem\Exceptions.cs" />
+    <Compile Include="DataAccess\FileSystem\ExceptionHelper.cs" />
     <Compile Include="DataAccess\FileSystem\FileSystemFileDataAccess.cs" />
     <Compile Include="DataAccessModels\Contracts\IFileMetadata.cs" />
     <Compile Include="DataAccessModels\Contracts\IFileVersionMetadata.cs" />
@@ -185,7 +188,7 @@
     <None Include="Properties\PublishProfiles\odatafileserver - Web Deploy.pubxml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Start\App_Data\" />
+    <Folder Include="App_Data\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

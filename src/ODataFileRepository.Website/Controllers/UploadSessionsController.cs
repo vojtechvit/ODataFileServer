@@ -70,12 +70,12 @@ namespace ODataFileRepository.Website.Controllers
 
             var uploadSession = await UploadSessionDataAccess.CreateAsync(
                 uploadSessionIdentifier,
-                fileIdentifier, 
+                fileIdentifier,
                 fileName);
-            
+
             return Created(new UploadSession(uploadSession));
         }
-        
+
         public async Task<IHttpActionResult> PutValue([FromODataUri] string key)
         {
             try
@@ -107,9 +107,10 @@ namespace ODataFileRepository.Website.Controllers
                     || !contentRange.Unit.Equals("bytes", StringComparison.Ordinal)
                     || contentRange.Length <= 0
                     || contentRange.From.Value < 0
-                    || contentRange.From.Value >= contentRange.Length - 1
-                    || contentRange.To.Value <= 0
-                    || contentRange.To.Value >= contentRange.Length)
+                    || contentRange.From.Value > contentRange.Length - 1
+                    || contentRange.From.Value > contentRange.To.Value
+                    || contentRange.To.Value < 0
+                    || contentRange.To.Value > contentRange.Length - 1)
                 {
                     return BadRequest();
                 }
@@ -119,16 +120,16 @@ namespace ODataFileRepository.Website.Controllers
                 var stream = await Request.Content.ReadAsStreamAsync();
 
                 var uploadSession = await UploadSessionDataAccess.UploadSegmentAsync(
-                    key, 
+                    key,
                     mediaType,
                     contentRange.From.Value,
                     contentRange.To.Value,
-                    contentRange.Length.Value, 
+                    contentRange.Length.Value,
                     stream);
 
-                if (uploadSession.FileVersionIdentifier != null)
+                if (uploadSession.Finished)
                 {
-                    var uploadedFile = await FileDataAccess.GetAsync(uploadSession.FileVersionIdentifier);
+                    var uploadedFile = await FileDataAccess.GetAsync(uploadSession.FileIdentifier);
 
                     return Ok(new UploadSession(uploadSession, uploadedFile));
                 }

@@ -6,10 +6,14 @@ namespace ODataFileRepository.Website.DataAccessModels.Contracts
     {
         string Id { get; }
 
+        string FileIdentifier { get; }
+
         string FileName { get; }
-        
+
+        string FileMediaType { get; }
+
         DateTimeOffset ExpirationDateTime { get; }
-        
-        string FileVersionIdentifier { get; }
+
+        bool Finished { get; }
     }
 }

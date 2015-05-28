@@ -10,7 +10,7 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
     {
         Task<IUploadSession> CreateAsync(
             string uploadSessionIdentifier,
-            string fileIdentifier, 
+            string fileIdentifier,
             string fileName);
 
         Task<bool> ExistsAsync(string uploadSessionIdentifier);
@@ -22,13 +22,13 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
         Task<IUploadSession> GetAsync(string uploadSessionIdentifier);
 
         Task<IUploadSession> UploadSegmentAsync(
-            string uploadSessionIdentifier, 
-            string mediaType, 
+            string uploadSessionIdentifier,
+            string mediaType,
             long rangeFrom,
             long rangeTo,
-            long rangeLength, 
+            long rangeLength,
             Stream stream);
 
-        Task<IUploadSession> DeleteAsync(string uploadSessionIdentifier);
+        Task DeleteAsync(string uploadSessionIdentifier);
     }
 }

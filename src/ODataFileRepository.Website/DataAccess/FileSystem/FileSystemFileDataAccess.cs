@@ -15,6 +15,13 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 {
     public sealed class FileSystemFileDataAccess : IFileDataAccess
     {
+        private static readonly DirectoryInfo _filesDirectory = new DirectoryInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "Files"));
+
+        internal static DirectoryInfo FilesDirectory
+        {
+            get { return _filesDirectory; }
+        }
+
         public async Task<IFileMetadata> CreateAsync(
             string identifier,
             string name,
@@ -36,8 +43,8 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 throw new ArgumentNullException("stream");
             }
 
-            var binaryFile = GetBinaryFileInfo(identifier);
-            var metadataFile = GetMetadataFileInfo(identifier);
+            var binaryFile = GetFileBinaryFileInfo(identifier);
+            var metadataFile = GetFileMetadataFileInfo(identifier);
 
             try
             {
@@ -52,7 +59,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                     Name = name
                 };
 
-                await SaveMetadata(metadataFile, metadata);
+                await SaveFileMetadataAsync(metadata);
 
                 return metadata;
             }
@@ -63,80 +70,59 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                     throw;
                 }
 
-                binaryFile.Delete();
-                metadataFile.Delete();
-
-                throw new ResourceAlreadyExistsException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "File '{0}' already exists.",
-                        binaryFile.Name),
-                    exception);
+                throw ExceptionHelper.ResourceAlreadyExists(identifier, exception);
             }
             catch (Exception exception)
             {
-                binaryFile.Delete();
-                metadataFile.Delete();
-
-                throw new DataAccessException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not create file '{0}' due to an internal error in the data access layer.",
-                        binaryFile.Name),
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
 
-        public Task<bool> ExistsAsync(string fullName)
+        public Task<bool> ExistsAsync(string identifier)
         {
-            if (fullName == null)
+            if (identifier == null)
             {
                 throw new ArgumentNullException("fullName");
             }
 
-            var binaryFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName));
-
-            return Task.FromResult(binaryFile.Exists);
+            return Task.FromResult(GetFileDirectoryInfo(identifier).Exists);
         }
 
         public async Task<IReadOnlyList<IFileMetadata>> GetAllAsync()
         {
             try
             {
-                var metadataFiles = FileSystemHelpers.AppDataDirectory.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly);
+                var fileDirectories = FilesDirectory.EnumerateDirectories();
 
-                var readTasks = new List<Task<IFileMetadata>>();
+                var readTasks = new List<Task<FileMetadata>>();
 
-                foreach (var metadataFile in metadataFiles)
+                foreach (var fileDirectory in fileDirectories)
                 {
-                    readTasks.Add(Task.Run<IFileMetadata>(async () =>
-                    {
-                        return await ReadMetadata(metadataFile);
-                    }));
+                    var metadataFile = GetFileMetadataFileInfo(fileDirectory.Name);
+
+                    readTasks.Add(ReadFileMetadataAsync(metadataFile));
                 }
 
                 return await Task.WhenAll(readTasks);
             }
             catch (Exception exception)
             {
-                throw new DataAccessException(
-                    "Could not get files due to an internal error in the data access layer.",
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
 
-        public async Task<IFileMetadata> GetAsync(string fullName)
+        public async Task<IFileMetadata> GetAsync(string identifier)
         {
-            if (fullName == null)
+            if (identifier == null)
             {
                 throw new ArgumentNullException("fullName");
             }
 
-            var metadataFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName + ".json"));
+            var metadataFile = GetFileMetadataFileInfo(identifier);
 
             try
             {
-                return await ReadMetadata(metadataFile);
+                return await ReadFileMetadataAsync(metadataFile);
             }
             catch (FileNotFoundException)
             {
@@ -144,30 +130,25 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             }
             catch (Exception exception)
             {
-                throw new DataAccessException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not get metadata of file '{0}' due to an internal error in the data access layer.",
-                        metadataFile.Name),
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
 
-        public async Task<LazyServiceStream> GetStreamAsync(string fullName)
+        public async Task<LazyMediaStream> GetStreamAsync(string identifier)
         {
-            if (fullName == null)
+            if (identifier == null)
             {
                 throw new ArgumentNullException("fullName");
             }
 
-            var metadataFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName + ".json"));
-            var binaryFile = new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, fullName));
+            var metadataFile = GetFileMetadataFileInfo(identifier);
+            var binaryFile = GetFileBinaryFileInfo(identifier);
 
             try
             {
-                var metadata = await ReadMetadata(metadataFile);
+                var metadata = await ReadFileMetadataAsync(metadataFile);
 
-                return new LazyServiceStream(() => binaryFile.OpenRead(), metadata.MediaType);
+                return new LazyMediaStream(() => binaryFile.OpenRead(), metadata.MediaType);
             }
             catch (FileNotFoundException)
             {
@@ -175,12 +156,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             }
             catch (Exception exception)
             {
-                throw new DataAccessException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not get stream of file '{0}' due to an internal error in the data access layer.",
-                        binaryFile.Name),
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
 
@@ -191,25 +167,20 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 throw new ArgumentNullException("metadata");
             }
 
-            var metadataFile = GetMetadataFileInfo(metadata.Id);
+            var metadataFile = GetFileMetadataFileInfo(metadata.Id);
 
             if (!metadataFile.Exists)
             {
-                Exceptions.ResourceNotFound(metadataFile.Name);
+                throw ExceptionHelper.ResourceNotFound(metadataFile.Name);
             }
 
             try
             {
-                await SaveMetadata(metadataFile, metadata);
+                await SaveFileMetadataAsync(metadata);
             }
             catch (Exception exception)
             {
-                throw new DataAccessException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not update metadata of file '{0}' due to an internal error in the data access layer.",
-                        metadata.Id),
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
 
@@ -230,12 +201,12 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 throw new ArgumentNullException("stream");
             }
 
-            var binaryFile = GetBinaryFileInfo(identifier);
-            var metadataFile = GetMetadataFileInfo(identifier);
+            var binaryFile = GetFileBinaryFileInfo(identifier);
+            var metadataFile = GetFileMetadataFileInfo(identifier);
 
             if (!binaryFile.Exists)
             {
-                Exceptions.ResourceNotFound(binaryFile.Name);
+                throw ExceptionHelper.ResourceNotFound(binaryFile.Name);
             }
 
             try
@@ -245,22 +216,18 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                     await stream.CopyToAsync(fileStream);
                 }
 
-                var metadata = await ReadMetadata(metadataFile);
+                var metadata = await ReadFileMetadataAsync(metadataFile);
 
                 metadata.MediaType = mediaType;
 
-                await SaveMetadata(metadataFile, metadata);
+                await SaveFileMetadataAsync(metadata);
             }
             catch (Exception exception)
             {
-                throw new DataAccessException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not update stream of file '{0}' due to an internal error in the data access layer.",
-                        binaryFile.Name),
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
+
         public Task DeleteAsync(string identifier)
         {
             if (identifier == null)
@@ -268,57 +235,59 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 throw new ArgumentNullException("identifier");
             }
 
-            var binaryFile = GetBinaryFileInfo(identifier);
-            var metadataFile = GetMetadataFileInfo(identifier);
+            var fileDirectory = GetFileDirectoryInfo(identifier);
 
-            if (!binaryFile.Exists)
+            if (!fileDirectory.Exists)
             {
-                Exceptions.ResourceNotFound(binaryFile.Name);
+                throw ExceptionHelper.ResourceNotFound(identifier);
             }
 
             try
             {
-                binaryFile.Delete();
-                metadataFile.Delete();
+                fileDirectory.Delete(true);
 
                 return Task.FromResult(true);
             }
             catch (Exception exception)
             {
-                throw new DataAccessException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not delete file '{0}' due to an internal error in the data access layer.",
-                        binaryFile.Name),
-                    exception);
+                throw ExceptionHelper.OtherError(exception);
             }
         }
 
-        private static FileInfo GetBinaryFileInfo(string identifier)
+        internal static DirectoryInfo GetFileDirectoryInfo(string identifier)
         {
             if (identifier == null)
             {
                 throw new ArgumentNullException("identifier");
             }
 
-            return new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "files", identifier, "content"));
+            return new DirectoryInfo(Path.Combine(FilesDirectory.FullName, identifier));
         }
 
-        private static FileInfo GetMetadataFileInfo(string identifier)
+        internal static FileInfo GetFileBinaryFileInfo(string identifier)
         {
             if (identifier == null)
             {
                 throw new ArgumentNullException("identifier");
             }
 
-            return new FileInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "files", identifier, "metadata.json"));
+            return new FileInfo(Path.Combine(GetFileDirectoryInfo(identifier).FullName, "content"));
         }
 
-        private static async Task<FileMetadata> ReadMetadata(FileInfo metadataFile)
+        internal static FileInfo GetFileMetadataFileInfo(string identifier)
+        {
+            if (identifier == null)
+            {
+                throw new ArgumentNullException("identifier");
+            }
+
+            return new FileInfo(Path.Combine(GetFileDirectoryInfo(identifier).FullName, "metadata.json"));
+        }
+
+        internal static async Task<FileMetadata> ReadFileMetadataAsync(FileInfo metadataFile)
         {
             FileMetadata metadata = null;
 
-            using (var fileStream = metadataFile.OpenRead())
             using (var reader = new StreamReader(metadataFile.FullName, Encoding.UTF8))
             {
                 string metadataString = await reader.ReadToEndAsync();
@@ -328,8 +297,9 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             return metadata;
         }
 
-        private static async Task SaveMetadata(FileInfo metadataFile, IFileMetadata metadata)
+        internal static async Task SaveFileMetadataAsync(IFileMetadata metadata)
         {
+            var metadataFile = GetFileMetadataFileInfo(metadata.Id);
             var metadataJson = JsonConvert.SerializeObject(metadata);
             var metadataJsonBytes = Encoding.UTF8.GetBytes(metadataJson);
 

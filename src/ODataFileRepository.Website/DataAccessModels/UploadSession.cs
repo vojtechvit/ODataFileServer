@@ -7,10 +7,14 @@ namespace ODataFileRepository.Website.DataAccessModels
     {
         public string Id { get; set; }
 
+        public string FileIdentifier { get; set; }
+
         public string FileName { get; set; }
+
+        public string FileMediaType { get; set; }
 
         public DateTimeOffset ExpirationDateTime { get; set; }
 
-        public string FileVersionIdentifier { get; set; }
+        public bool Finished { get; set; }
     }
 }

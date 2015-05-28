@@ -22,13 +22,17 @@ namespace ODataFileRepository.Website.ServiceModels
 
             Id = fileMetadata.Id;
             Name = fileMetadata.Name;
+            MediaType = fileMetadata.MediaType;
         }
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
 
         public string Name { get; set; }
-        
+
+        [Required]
+        public string MediaType { get; set; }
+
         [Required]
         public FileVersion CurrentVersion { get; set; }
 

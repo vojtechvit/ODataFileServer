@@ -17,6 +17,6 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
 
         Task<IFileVersionMetadata> GetAsync(string fileIdentifier, string fileVersionIdentifier);
 
-        Task<LazyServiceStream> GetStreamAsync(string fileIdentifier, string fileVersionIdentifier);
+        Task<LazyMediaStream> GetStreamAsync(string fileIdentifier, string fileVersionIdentifier);
     }
 }

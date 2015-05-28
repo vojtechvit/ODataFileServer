@@ -10,7 +10,7 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
     public interface IFileDataAccess
     {
         Task<IFileMetadata> CreateAsync(string identifier, string name, string mediaType, Stream stream);
-      
+
         Task<bool> ExistsAsync(string identifier);
 
         [SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate",
@@ -18,11 +18,11 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
         Task<IReadOnlyList<IFileMetadata>> GetAllAsync();
 
         Task<IFileMetadata> GetAsync(string fileIdentifier);
-        
-        Task<LazyServiceStream> GetStreamAsync(string fileIdentifier);
+
+        Task<LazyMediaStream> GetStreamAsync(string fileIdentifier);
 
         Task UpdateAsync(IFileMetadata fileMetadata);
-        
+
         Task UpdateStreamAsync(string fileIdentifier, string mediaType, Stream stream);
 
         Task DeleteAsync(string fileIdentifier);
