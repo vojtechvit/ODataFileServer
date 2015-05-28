@@ -22,6 +22,15 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 exception);
         }
 
+        public static ResourceAlreadyExistsException ResourceAlreadyExists(string resourceIdentifier)
+        {
+            return new ResourceAlreadyExistsException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Resource with identifier '{0}' already exists.",
+                    resourceIdentifier));
+        }
+
         public static ResourceAlreadyExistsException ResourceAlreadyExists(string resourceIdentifier, Exception exception)
         {
             return new ResourceAlreadyExistsException(

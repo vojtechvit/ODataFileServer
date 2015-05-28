@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json;
 using ODataFileRepository.Website.DataAccess.Contracts;
-using ODataFileRepository.Website.DataAccess.Exceptions;
 using ODataFileRepository.Website.DataAccessModels;
 using ODataFileRepository.Website.DataAccessModels.Contracts;
 using ODataFileRepository.Website.Infrastructure;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,11 +41,19 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 throw new ArgumentNullException("stream");
             }
 
+            var fileDirectory = GetFileDirectoryInfo(identifier);
             var binaryFile = GetFileBinaryFileInfo(identifier);
             var metadataFile = GetFileMetadataFileInfo(identifier);
 
+            if (fileDirectory.Exists)
+            {
+                throw ExceptionHelper.ResourceAlreadyExists(identifier);
+            }
+
             try
             {
+                fileDirectory.Create();
+
                 using (var fileStream = new FileStream(binaryFile.FullName, FileMode.CreateNew, FileAccess.Write))
                 {
                     await stream.CopyToAsync(fileStream);
@@ -63,17 +69,9 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 
                 return metadata;
             }
-            catch (IOException exception)
-            {
-                if (!exception.Message.Contains("exists"))
-                {
-                    throw;
-                }
-
-                throw ExceptionHelper.ResourceAlreadyExists(identifier, exception);
-            }
             catch (Exception exception)
             {
+                fileDirectory.Delete();
                 throw ExceptionHelper.OtherError(exception);
             }
         }

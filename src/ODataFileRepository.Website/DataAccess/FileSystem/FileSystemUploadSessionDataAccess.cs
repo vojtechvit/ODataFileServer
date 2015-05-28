@@ -3,11 +3,8 @@ using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
 using ODataFileRepository.Website.DataAccessModels;
 using ODataFileRepository.Website.DataAccessModels.Contracts;
-using ODataFileRepository.Website.Infrastructure;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -59,25 +56,24 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 ExpirationDateTime = DateTimeOffset.UtcNow.Add(_uploadSessionTimeout)
             };
 
-            var uploadSessionFile = GetUploadSessionMetadataFileInfo(uploadSessionIdentifier);
+            var uploadSessionDirectory = GetUploadSessionDirectoryInfo(uploadSessionIdentifier);
+            var uploadSessionMetadataFile = GetUploadSessionMetadataFileInfo(uploadSessionIdentifier);
+
+            if (uploadSessionDirectory.Exists)
+            {
+                throw ExceptionHelper.ResourceAlreadyExists(uploadSessionIdentifier);
+            }
 
             try
             {
+                uploadSessionDirectory.Create();
                 await SaveUploadSessionMetadataAsync(uploadSession);
 
                 return uploadSession;
             }
-            catch (IOException exception)
-            {
-                if (!exception.Message.Contains("exists"))
-                {
-                    throw;
-                }
-
-                throw ExceptionHelper.ResourceAlreadyExists(uploadSessionIdentifier, exception);
-            }
             catch (Exception exception)
             {
+                uploadSessionDirectory.Delete();
                 throw ExceptionHelper.OtherError(exception);
             }
         }

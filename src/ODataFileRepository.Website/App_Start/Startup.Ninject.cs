@@ -17,6 +17,7 @@ namespace ODataFileRepository.Website
                 var kernel = new StandardKernel();
 
                 kernel.Bind<IFileDataAccess>().To<FileSystemFileDataAccess>().InRequestScope();
+                kernel.Bind<IUploadSessionDataAccess>().To<FileSystemUploadSessionDataAccess>().InRequestScope();
 
                 return kernel;
             }
