@@ -69,10 +69,6 @@
       <HintPath>..\..\packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Hosting, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.Owin.Hosting.3.0.1\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.Spatial, Version=6.11.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.Spatial.6.11.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.Spatial.dll</HintPath>
       <Private>True</Private>
@@ -81,17 +77,15 @@
       <HintPath>..\..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Ninject.3.2.0.0\lib\net45-full\Ninject.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Ninject">
+      <HintPath>..\..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="Ninject.Extensions.ContextPreservation, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Ninject.Extensions.ContextPreservation.3.2.0.0\lib\net45-full\Ninject.Extensions.ContextPreservation.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ninject.Extensions.Factory, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Ninject.Extensions.Factory.3.2.2-unstable-002\lib\net45-full\Ninject.Extensions.Factory.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Ninject.Extensions.Factory">
+      <HintPath>..\..\packages\Ninject.Extensions.Factory.3.2.1.0\lib\net45-full\Ninject.Extensions.Factory.dll</HintPath>
     </Reference>
     <Reference Include="Ninject.Extensions.NamedScope, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Ninject.Extensions.NamedScope.3.2.0.0\lib\net45-full\Ninject.Extensions.NamedScope.dll</HintPath>
@@ -154,7 +148,6 @@
     <Compile Include="Controllers\UploadSessionsController.cs" />
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="DataAccess\Contracts\IUploadSessionDataAccess.cs" />
-    <Compile Include="DataAccess\Contracts\IFileVersionDataAccess.cs" />
     <Compile Include="DataAccess\Contracts\IFileDataAccess.cs" />
     <Compile Include="DataAccess\Exceptions\DataAccessException.cs" />
     <Compile Include="DataAccess\Exceptions\InvalidMediaTypeException.cs" />
@@ -165,10 +158,8 @@
     <Compile Include="DataAccess\FileSystem\ExceptionHelper.cs" />
     <Compile Include="DataAccess\FileSystem\FileSystemFileDataAccess.cs" />
     <Compile Include="DataAccessModels\Contracts\IFileMetadata.cs" />
-    <Compile Include="DataAccessModels\Contracts\IFileVersionMetadata.cs" />
     <Compile Include="DataAccessModels\Contracts\IUploadSession.cs" />
     <Compile Include="DataAccessModels\FileMetadata.cs" />
-    <Compile Include="DataAccessModels\FileVersionMetadata.cs" />
     <Compile Include="DataAccessModels\UploadSession.cs" />
     <Compile Include="DataAccess\FileSystem\FileSystemHelpers.cs" />
     <Compile Include="DataAccess\FileSystem\FileSystemUploadSessionDataAccess.cs" />
@@ -186,7 +177,6 @@
     <Compile Include="ServiceModels\File.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="App_Start\Startup.cs" />
-    <Compile Include="ServiceModels\FileVersion.cs" />
     <Compile Include="ServiceModels\UploadSession.cs" />
   </ItemGroup>
   <ItemGroup>

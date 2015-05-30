@@ -15,6 +15,14 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
     {
         private static readonly DirectoryInfo _filesDirectory = new DirectoryInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "Files"));
 
+        public FileSystemFileDataAccess()
+        {
+            if (!FilesDirectory.Exists)
+            {
+                FilesDirectory.Create();
+            }
+        }
+
         internal static DirectoryInfo FilesDirectory
         {
             get { return _filesDirectory; }

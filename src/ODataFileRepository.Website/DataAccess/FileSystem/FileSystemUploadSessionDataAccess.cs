@@ -19,6 +19,14 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 
         private static readonly TimeSpan _uploadSessionTimeout = TimeSpan.FromDays(7);
 
+        public FileSystemUploadSessionDataAccess()
+        {
+            if (!UploadSessionsDirectory.Exists)
+            {
+                UploadSessionsDirectory.Create();
+            }
+        }
+
         internal static DirectoryInfo UploadSessionsDirectory
         {
             get { return _uploadSessionsDirectory; }

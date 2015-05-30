@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.OData;
 using System.Web.OData.Results;
-using System.Web.OData.Routing;
 
 namespace ODataFileRepository.Website.Controllers
 {
@@ -56,24 +55,24 @@ namespace ODataFileRepository.Website.Controllers
             return Ok(new UploadSession(uploadSession));
         }
 
-        [HttpPost, ODataRoute("files/upload.startSession")]
-        public async Task<IHttpActionResult> StartSession(ODataActionParameters parameters)
+        [HttpPost]
+        public async Task<IHttpActionResult> Post(UploadSession uploadSession)
         {
-            if (parameters == null || ModelState.IsValid)
+            if (uploadSession == null || ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
             string uploadSessionIdentifier = Guid.NewGuid().ToString("N").ToLowerInvariant();
             string fileIdentifier = Guid.NewGuid().ToString("N").ToLowerInvariant();
-            string fileName = parameters["fileName"] as string;
+            string fileName = uploadSession.FileName as string;
 
-            var uploadSession = await UploadSessionDataAccess.CreateAsync(
+            var createdUploadSession = await UploadSessionDataAccess.CreateAsync(
                 uploadSessionIdentifier,
                 fileIdentifier,
                 fileName);
 
-            return Created(new UploadSession(uploadSession));
+            return Created(new UploadSession(createdUploadSession));
         }
 
         public async Task<IHttpActionResult> PutValue([FromODataUri] string key)
