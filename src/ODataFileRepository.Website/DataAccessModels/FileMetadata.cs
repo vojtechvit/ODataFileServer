@@ -9,5 +9,7 @@ namespace ODataFileRepository.Website.DataAccessModels
         public string Name { get; set; }
 
         public string MediaType { get; set; }
+
+        public long Size { get; set; }
     }
 }

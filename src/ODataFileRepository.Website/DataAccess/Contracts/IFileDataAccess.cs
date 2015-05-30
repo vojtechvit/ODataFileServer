@@ -9,7 +9,12 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
 {
     public interface IFileDataAccess
     {
-        Task<IFileMetadata> CreateAsync(string identifier, string name, string mediaType, Stream stream);
+        Task<IFileMetadata> CreateAsync(
+            string identifier, 
+            string name, 
+            string mediaType,
+            long size,
+            Stream stream);
 
         Task<bool> ExistsAsync(string identifier);
 
@@ -23,7 +28,11 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
 
         Task UpdateAsync(IFileMetadata metadata);
 
-        Task UpdateStreamAsync(string identifier, string mediaType, Stream stream);
+        Task UpdateStreamAsync(
+            string identifier, 
+            string mediaType,
+            long size,
+            Stream stream);
 
         Task DeleteAsync(string identifier);
     }

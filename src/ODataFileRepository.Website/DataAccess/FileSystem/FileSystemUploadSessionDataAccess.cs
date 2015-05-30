@@ -44,7 +44,9 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 
             if (string.IsNullOrWhiteSpace(uploadSessionIdentifier))
             {
-                throw new ArgumentOutOfRangeException("uploadSessionIdentifier", "fileIdentifier must not be empty nor whitespace.");
+                throw new ArgumentException(
+                    "fileIdentifier must not be empty nor whitespace.", 
+                    "uploadSessionIdentifier");
             }
 
             if (fileIdentifier == null)
@@ -214,16 +216,21 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             {
                 var uploadSessionMetadataFile = GetUploadSessionMetadataFileInfo(uploadSessionIdentifier);
                 uploadSession.FileMediaType = mediaType;
+                uploadSession.FileSize = rangeLength;
                 await SaveUploadSessionMetadataAsync(uploadSession);
             }
             else if (!mediaType.Equals(uploadSession.FileMediaType, StringComparison.Ordinal))
             {
                 throw new InvalidMediaTypeException("mediaType is not equal to the initial media type of the uploaded file.");
             }
+            else if (uploadSession.FileSize != rangeLength)
+            {
+                throw new InvalidRangeException("Content range length is not equal to the initial range length of the uploaded file.");
+            }
 
             if (!IsValidMissingSegment(uploadSessionIdentifier, rangeFrom, rangeTo, rangeLength))
             {
-                throw new InvalidRangeException("Uploaded range is not valid - at least some part of it has already been uploaded.");
+                throw new InvalidRangeException("Content range is not valid - at least some part of it has already been uploaded.");
             }
 
             try
@@ -292,7 +299,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 
             var uploadSessionDirectory = GetUploadSessionDirectoryInfo(uploadSessionIdentifier);
 
-            return new FileInfo(Path.Combine(uploadSessionDirectory.FullName, string.Join(" -", "segment", rangeFrom, rangeTo)));
+            return new FileInfo(Path.Combine(uploadSessionDirectory.FullName, string.Join("-", "segment", rangeFrom, rangeTo)));
         }
 
         private static bool IsValidMissingSegment(

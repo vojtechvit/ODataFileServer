@@ -21,6 +21,7 @@ namespace ODataFileRepository.Website.ServiceModels
             Id = fileMetadata.Id;
             Name = fileMetadata.Name;
             MediaType = fileMetadata.MediaType;
+            Size = fileMetadata.Size;
         }
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -28,7 +29,10 @@ namespace ODataFileRepository.Website.ServiceModels
 
         public string Name { get; set; }
 
-        [Required]
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string MediaType { get; set; }
+
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public long Size { get; set; }
     }
 }

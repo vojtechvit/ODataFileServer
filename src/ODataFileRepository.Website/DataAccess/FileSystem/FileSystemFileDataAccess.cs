@@ -32,6 +32,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             string identifier,
             string name,
             string mediaType,
+            long size,
             Stream stream)
         {
             if (identifier == null)
@@ -42,6 +43,11 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             if (mediaType == null)
             {
                 throw new ArgumentNullException("mediaType");
+            }
+
+            if (size <= 0)
+            {
+                throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
             }
 
             if (stream == null)
@@ -71,7 +77,8 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 {
                     Id = identifier,
                     Name = name,
-                    MediaType = mediaType
+                    MediaType = mediaType,
+                    Size = size
                 };
 
                 await SaveFileMetadataAsync(metadata);
@@ -191,7 +198,11 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             }
         }
 
-        public async Task UpdateStreamAsync(string identifier, string mediaType, Stream stream)
+        public async Task UpdateStreamAsync(
+            string identifier, 
+            string mediaType, 
+            long size,
+            Stream stream)
         {
             if (identifier == null)
             {
@@ -201,6 +212,11 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             if (mediaType == null)
             {
                 throw new ArgumentNullException("mediaType");
+            }
+
+            if (size <= 0)
+            {
+                throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
             }
 
             if (stream == null)
@@ -226,6 +242,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 var metadata = await ReadFileMetadataAsync(metadataFile);
 
                 metadata.MediaType = mediaType;
+                metadata.Size = size;
 
                 await SaveFileMetadataAsync(metadata);
             }

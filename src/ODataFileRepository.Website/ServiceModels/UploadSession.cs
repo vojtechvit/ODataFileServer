@@ -19,7 +19,10 @@ namespace ODataFileRepository.Website.ServiceModels
             }
 
             Id = uploadSession.Id;
+            FileIdentifier = uploadSession.FileIdentifier;
             FileName = uploadSession.FileName;
+            FileMediaType = uploadSession.FileMediaType;
+            FileSize = uploadSession.FileSize;
             ExpirationDateTime = uploadSession.ExpirationDateTime;
         }
 
@@ -33,13 +36,26 @@ namespace ODataFileRepository.Website.ServiceModels
                 throw new ArgumentNullException("uploadedFile");
             }
 
+            FileIdentifier = uploadedFile.Id;
+            FileName = uploadedFile.Name;
+            FileMediaType = uploadedFile.MediaType;
+            FileSize = uploadedFile.Size;
             UploadedFile = new File(uploadedFile);
         }
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
 
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string FileIdentifier { get; set; }
+
         public string FileName { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string FileMediaType { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public long FileSize { get; set; }
 
         [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTimeOffset ExpirationDateTime { get; set; }

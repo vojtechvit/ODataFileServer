@@ -13,6 +13,8 @@ namespace ODataFileRepository.Website.DataAccessModels
 
         public string FileMediaType { get; set; }
 
+        public long FileSize { get; set; }
+
         public DateTimeOffset ExpirationDateTime { get; set; }
 
         public bool Finished { get; set; }

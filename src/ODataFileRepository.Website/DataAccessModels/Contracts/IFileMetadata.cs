@@ -7,5 +7,7 @@
         string Name { get; }
 
         string MediaType { get; }
+
+        long Size { get; }
     }
 }

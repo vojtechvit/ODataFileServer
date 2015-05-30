@@ -144,12 +144,29 @@ namespace ODataFileRepository.Website.Controllers
                 return BadRequest();
             }
 
+            var contentLength = Request.Content.Headers.ContentLength;
+
+            if (!contentLength.HasValue)
+            {
+                return StatusCode(HttpStatusCode.LengthRequired);
+            }
+
+            if (contentLength.Value <= 0)
+            {
+                return BadRequest();
+            }
+
             var identifier = Guid.NewGuid().ToString("N").ToLowerInvariant();
             var mediaType = contentTypeHeader.MediaType;
 
             var stream = await Request.Content.ReadAsStreamAsync();
 
-            var file = await FileDataAccess.CreateAsync(identifier, null, mediaType, stream);
+            var file = await FileDataAccess.CreateAsync(
+                identifier, 
+                null, 
+                mediaType,
+                contentLength.Value,
+                stream);
 
             return Created(new File(file));
         }
@@ -215,12 +232,14 @@ namespace ODataFileRepository.Website.Controllers
                     return BadRequest();
                 }
 
-                if (!Request.Content.Headers.ContentLength.HasValue)
+                var contentLength = Request.Content.Headers.ContentLength;
+
+                if (!contentLength.HasValue)
                 {
                     return StatusCode(HttpStatusCode.LengthRequired);
                 }
 
-                if (Request.Content.Headers.ContentLength.Value <= 0)
+                if (contentLength.Value <= 0)
                 {
                     return BadRequest();
                 }
@@ -229,7 +248,11 @@ namespace ODataFileRepository.Website.Controllers
 
                 var stream = await Request.Content.ReadAsStreamAsync();
 
-                await FileDataAccess.UpdateStreamAsync(key, mediaType, stream);
+                await FileDataAccess.UpdateStreamAsync(
+                    key, 
+                    mediaType,
+                    contentLength.Value,
+                    stream);
 
                 return StatusCode(HttpStatusCode.NoContent);
             }

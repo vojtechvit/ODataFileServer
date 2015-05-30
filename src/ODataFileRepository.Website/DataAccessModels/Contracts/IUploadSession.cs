@@ -12,6 +12,8 @@ namespace ODataFileRepository.Website.DataAccessModels.Contracts
 
         string FileMediaType { get; }
 
+        long FileSize { get; }
+
         DateTimeOffset ExpirationDateTime { get; }
 
         bool Finished { get; }

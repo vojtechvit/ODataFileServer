@@ -58,7 +58,7 @@ namespace ODataFileRepository.Website.Controllers
         [HttpPost]
         public async Task<IHttpActionResult> Post(UploadSession uploadSession)
         {
-            if (uploadSession == null || ModelState.IsValid)
+            if (uploadSession == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
@@ -86,12 +86,14 @@ namespace ODataFileRepository.Website.Controllers
                     return BadRequest();
                 }
 
-                if (!Request.Content.Headers.ContentLength.HasValue)
+                var contentLength = Request.Content.Headers.ContentLength;
+
+                if (!contentLength.HasValue)
                 {
                     return StatusCode(HttpStatusCode.LengthRequired);
                 }
 
-                if (Request.Content.Headers.ContentLength.Value <= 0)
+                if (contentLength.Value <= 0)
                 {
                     return BadRequest();
                 }
@@ -109,7 +111,8 @@ namespace ODataFileRepository.Website.Controllers
                     || contentRange.From.Value > contentRange.Length - 1
                     || contentRange.From.Value > contentRange.To.Value
                     || contentRange.To.Value < 0
-                    || contentRange.To.Value > contentRange.Length - 1)
+                    || contentRange.To.Value > contentRange.Length - 1
+                    || contentRange.To.Value - contentRange.From.Value + 1 != contentLength)
                 {
                     return BadRequest();
                 }
