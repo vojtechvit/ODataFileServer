@@ -3,6 +3,7 @@ using ODataFileRepository.Website.DataAccess.Contracts;
 using ODataFileRepository.Website.DataAccess.Exceptions;
 using ODataFileRepository.Website.DataAccessModels;
 using ODataFileRepository.Website.DataAccessModels.Contracts;
+using ODataFileRepository.Website.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,16 +16,22 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
 {
     public sealed class FileSystemUploadSessionDataAccess : IUploadSessionDataAccess
     {
+        private const string SEGMENT_FILE_PATTERN = "segment-*";
+
         private static readonly DirectoryInfo _uploadSessionsDirectory = new DirectoryInfo(Path.Combine(FileSystemHelpers.AppDataDirectory.FullName, "UploadSessions"));
 
         private static readonly TimeSpan _uploadSessionTimeout = TimeSpan.FromDays(7);
 
-        public FileSystemUploadSessionDataAccess()
+        private readonly Lazy<IFileDataAccess> _fileDataAccess;
+
+        public FileSystemUploadSessionDataAccess(Lazy<IFileDataAccess> fileDataAccess)
         {
             if (!UploadSessionsDirectory.Exists)
             {
                 UploadSessionsDirectory.Create();
             }
+
+            _fileDataAccess = fileDataAccess;
         }
 
         internal static DirectoryInfo UploadSessionsDirectory
@@ -243,7 +250,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
                 // Check if all segments have been uploaded successfuly
                 if (!GetMissingSegments(uploadSessionIdentifier, rangeLength).Any())
                 {
-                    await CreateFinalFileAsync(uploadSessionIdentifier, uploadSession.FileIdentifier);
+                    await CreateFinalFileAsync(uploadSession);
                     uploadSession.Finished = true;
                     await SaveUploadSessionMetadataAsync(uploadSession);
                 }
@@ -368,23 +375,6 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             return missingSegments;
         }
 
-        private async Task<UploadSession> GetInternalAsync(string uploadSessionIdentifier, bool throwExceptionOnNotFound = true)
-        {
-            var uploadSession = await GetAsync(uploadSessionIdentifier) as UploadSession;
-
-            if (throwExceptionOnNotFound && uploadSession == null)
-            {
-                throw new ResourceNotFoundException();
-            }
-
-            if (uploadSession.ExpirationDateTime < DateTimeOffset.UtcNow)
-            {
-                throw new UploadSessionExpiredException();
-            }
-
-            return uploadSession;
-        }
-
         private static async Task<UploadSession> ReadUploadSessionAsync(FileInfo uploadSessionFile)
         {
             UploadSession uploadSession = null;
@@ -410,20 +400,41 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             }
         }
 
-        private static async Task CreateFinalFileAsync(string uploadSessionIdentifier, string fileIdentifier)
+        private async Task<UploadSession> GetInternalAsync(string uploadSessionIdentifier, bool throwExceptionOnNotFound = true)
         {
-            var segmentFiles = GetUploadSessionDirectoryInfo(uploadSessionIdentifier).EnumerateFiles();
+            var uploadSession = await GetAsync(uploadSessionIdentifier) as UploadSession;
 
-            using (var fileStream = new FileStream(FileSystemFileDataAccess.GetFileBinaryFileInfo(fileIdentifier).FullName, FileMode.CreateNew, FileAccess.Write))
+            if (throwExceptionOnNotFound && uploadSession == null)
             {
-                foreach (var segmentFile in segmentFiles)
-                {
-                    using (var segmentFileReader = new FileStream(segmentFile.FullName, FileMode.Open, FileAccess.Read))
-                    {
-                        await segmentFileReader.CopyToAsync(fileStream);
-                    }
-                }
+                throw new ResourceNotFoundException();
             }
+
+            if (uploadSession.ExpirationDateTime < DateTimeOffset.UtcNow)
+            {
+                throw new UploadSessionExpiredException();
+            }
+
+            return uploadSession;
+        }
+
+        private async Task CreateFinalFileAsync(
+            UploadSession uploadSession)
+        {
+            var segmentFileStreams = GetUploadSessionDirectoryInfo(uploadSession.Id)
+                .EnumerateFiles(SEGMENT_FILE_PATTERN)
+                .Select(segmentFile => new FileStream(
+                    segmentFile.FullName, 
+                    FileMode.Open, 
+                    FileAccess.Read));
+
+            var multiStream = new JoinedStream(segmentFileStreams);
+
+            await _fileDataAccess.Value.CreateAsync(
+                uploadSession.FileIdentifier,
+                uploadSession.FileName,
+                uploadSession.FileMediaType,
+                uploadSession.FileSize,
+                multiStream);
         }
     }
 }

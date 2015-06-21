@@ -24,7 +24,7 @@ namespace ODataFileRepository.Website.DataAccess.Contracts
 
         Task<IFileMetadata> GetAsync(string identifier);
 
-        Task<LazyMediaStream> GetStreamAsync(string identifier);
+        Task<MetadataStream<IFileMetadata>> GetStreamAsync(string identifier);
 
         Task UpdateAsync(IFileMetadata metadata);
 

@@ -75,13 +75,13 @@ namespace ODataFileRepository.Website.Controllers
                 response.Headers.AcceptRanges.Add("bytes");
 
                 response.Content = new StreamContent(fileStream);
-                response.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(fileStream.MediaType);
+                response.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(fileStream.Metadata.MediaType);
 
-                if (fileStream.FileName != null)
+                if (fileStream.Metadata.Name != null)
                 {
                     var contentDispositionHeader = new ContentDispositionHeaderValue("attachment")
                     {
-                        FileName = fileStream.FileName
+                        FileName = fileStream.Metadata.Name
                     };
 
                     response.Content.Headers.ContentDisposition = contentDispositionHeader;
@@ -102,7 +102,7 @@ namespace ODataFileRepository.Website.Controllers
                 try
                 {
                     // return the requested range(s)
-                    response.Content = new ByteRangeStreamContent(fileStream, range, fileStream.MediaType);
+                    response.Content = new ByteRangeStreamContent(fileStream, range, fileStream.Metadata.MediaType);
                 }
                 catch (InvalidByteRangeException)
                 {
@@ -110,11 +110,11 @@ namespace ODataFileRepository.Website.Controllers
                     throw;
                 }
 
-                if (fileStream.FileName != null)
+                if (fileStream.Metadata.Name != null)
                 {
                     var contentDispositionHeader = new ContentDispositionHeaderValue("attachment")
                     {
-                        FileName = fileStream.FileName
+                        FileName = fileStream.Metadata.Name
                     };
 
                     response.Content.Headers.ContentDisposition = contentDispositionHeader;

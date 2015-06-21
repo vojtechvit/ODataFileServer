@@ -148,7 +148,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             }
         }
 
-        public async Task<LazyMediaStream> GetStreamAsync(string identifier)
+        public async Task<MetadataStream<IFileMetadata>> GetStreamAsync(string identifier)
         {
             if (identifier == null)
             {
@@ -162,7 +162,7 @@ namespace ODataFileRepository.Website.DataAccess.FileSystem
             {
                 var metadata = await ReadFileMetadataAsync(metadataFile);
 
-                return new LazyMediaStream(() => binaryFile.OpenRead(), metadata.MediaType, metadata.Name);
+                return new MetadataStream<IFileMetadata>(binaryFile.OpenRead(), metadata);
             }
             catch (FileNotFoundException)
             {
