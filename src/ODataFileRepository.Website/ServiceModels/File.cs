@@ -1,12 +1,11 @@
-﻿using ODataFileRepository.Website.DomainModels.Contracts;
-using ODataFileRepository.Website.Infrastructure.ODataExtensions.Contracts;
+﻿using ODataFileRepository.Website.DataAccessModels.Contracts;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ODataFileRepository.Website.ServiceModels
 {
-    public class File : IFileMetadata, IMediaTypeHolder
+    public class File : IFileMetadata
     {
         public File()
         {
@@ -19,14 +18,21 @@ namespace ODataFileRepository.Website.ServiceModels
                 throw new ArgumentNullException("fileMetadata");
             }
 
-            FullName = fileMetadata.FullName;
+            Id = fileMetadata.Id;
+            Name = fileMetadata.Name;
             MediaType = fileMetadata.MediaType;
+            Size = fileMetadata.Size;
         }
 
-        [Key]
-        public string FullName { get; set; }
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public string Id { get; set; }
 
-        [NotMapped]
+        public string Name { get; set; }
+
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string MediaType { get; set; }
+
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public long Size { get; set; }
     }
 }

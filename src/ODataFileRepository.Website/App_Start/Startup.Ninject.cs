@@ -1,7 +1,7 @@
 ﻿using Ninject;
 using Ninject.Web.Common;
-using ODataFileRepository.Website.DataAccess;
 using ODataFileRepository.Website.DataAccess.Contracts;
+using ODataFileRepository.Website.DataAccess.FileSystem;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ODataFileRepository.Website
@@ -17,6 +17,7 @@ namespace ODataFileRepository.Website
                 var kernel = new StandardKernel();
 
                 kernel.Bind<IFileDataAccess>().To<FileSystemFileDataAccess>().InRequestScope();
+                kernel.Bind<IUploadSessionDataAccess>().To<FileSystemUploadSessionDataAccess>().InRequestScope();
 
                 return kernel;
             }
