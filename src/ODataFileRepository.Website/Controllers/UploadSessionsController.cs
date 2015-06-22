@@ -64,8 +64,8 @@ namespace ODataFileRepository.Website.Controllers
             }
 
             string uploadSessionIdentifier = Guid.NewGuid().ToString("N").ToLowerInvariant();
-            string fileIdentifier = Guid.NewGuid().ToString("N").ToLowerInvariant();
-            string fileName = uploadSession.FileName as string;
+            string fileIdentifier = uploadSession.FileIdentifier ?? Guid.NewGuid().ToString("N").ToLowerInvariant();
+            string fileName = uploadSession.FileName;
 
             var createdUploadSession = await UploadSessionDataAccess.CreateAsync(
                 uploadSessionIdentifier,
