@@ -13,20 +13,27 @@ namespace ODataFileRepository.Website
     {
         private static class OData
         {
+            private const string ContainerNamespace = "container";
+
             private const string TypeNamespace = "type";
 
             public static IEdmModel CreateModel()
             {
                 var modelBuilder = new ODataConventionModelBuilder();
                 modelBuilder.EnableLowerCamelCase();
-                modelBuilder.Namespace = "container";
+                modelBuilder.Namespace = ContainerNamespace;
                 modelBuilder.ContainerName = "fileRepository";
 
                 var fileType = modelBuilder.EntityType<File>();
                 fileType.Name = Camelize(fileType.Name);
                 fileType.Namespace = TypeNamespace;
 
+                var uploadSessionType = modelBuilder.EntityType<UploadSession>();
+                uploadSessionType.Name = Camelize(uploadSessionType.Name);
+                uploadSessionType.Namespace = TypeNamespace;
+
                 modelBuilder.EntitySet<File>("files");
+                modelBuilder.EntitySet<UploadSession>("uploadSessions");
 
                 var model = modelBuilder.GetEdmModel() as EdmModel;
 
@@ -61,34 +68,34 @@ namespace ODataFileRepository.Website
                 return stringBuilder.ToString();
             }
 
-            private static void SetPrivateFieldValue<T>(object obj, string propName, T val)
+            private static void SetPrivateFieldValue<T>(object obj, string fieldName, T value)
             {
                 if (obj == null)
                 {
                     throw new ArgumentNullException("obj");
                 }
 
-                Type t = obj.GetType();
-                FieldInfo fi = null;
+                Type type = obj.GetType();
+                FieldInfo fieldInfo = null;
 
-                while (fi == null && t != null)
+                while (fieldInfo == null && type != null)
                 {
-                    fi = t.GetField(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    t = t.BaseType;
+                    fieldInfo = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    type = type.BaseType;
                 }
 
-                if (fi == null)
+                if (fieldInfo == null)
                 {
                     throw new ArgumentOutOfRangeException(
-                        "propName",
+                        "fieldName",
                         string.Format(
                             CultureInfo.InvariantCulture,
                             "Field {0} was not found in Type {1}",
-                            propName,
+                            fieldName,
                             obj.GetType().FullName));
                 }
 
-                fi.SetValue(obj, val);
+                fieldInfo.SetValue(obj, value);
             }
         }
     }
